@@ -49,6 +49,21 @@ The Vite dev server proxies `/api` to Express, so the app and API share one orig
 | `npm run build` | Build client, then bundle server |
 | `npm start` | Run the production server (serves the built client) |
 
+## Deploying (Render + Neon)
+
+Two Neon branches keep real data away from development:
+
+| Neon branch | Used by |
+|---|---|
+| `production` | The live site on Render |
+| `dev` | Local development (`server/.env`) and tests (its `dinkup_test` database) |
+
+The app is deployed to Render with the Blueprint in [`render.yaml`](render.yaml): one free web service in Singapore, the same region as the database. On every push to `main`, Render installs, builds, runs migrations, runs the idempotent seed (courts + demo data), and starts Express. Express serves both the API and the built app on one HTTPS domain.
+
+Set `DATABASE_URL` (pooled) and `DIRECT_URL` (direct) for the `production` branch in the Render dashboard. Render generates `SESSION_SECRET`.
+
+Free-tier note: the Render service and the Neon database both sleep when idle, so the first visit after a quiet spell takes a little longer.
+
 ## Demo mode
 
 With `DEMO_MODE=true` (the default), the server keeps a rolling week of demo games hosted by a fake cast. It fills them in on startup and every hour, and clears out old ones. **Try the demo** on the home and login pages logs a visitor into a fresh throwaway account, deleted after 24 hours. Demo games and players are always labeled "Demo" so real players never travel to a court for a game that doesn't exist. Set `DEMO_MODE=false` to turn all of this off.

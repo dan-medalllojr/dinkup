@@ -1,0 +1,34 @@
+# Render Blueprint: Dashboard → New → Blueprint → pick this repo.
+# One web service: Express serves the API and the built React app on one domain.
+services:
+  - type: web
+    name: dinkup
+    runtime: node
+    # Same region as the Neon database (AWS ap-southeast-1), and closest to Cebu.
+    region: singapore
+    plan: free
+    # --include=dev: NODE_ENV=production would otherwise skip the build tools
+    # (Vite, tsup, the Prisma CLI). Migrations and the idempotent seed (courts +
+    # demo data) run here because the free plan has no pre-deploy step.
+    buildCommand: >-
+      npm ci --include=dev &&
+      npm run build &&
+      npm run db:deploy --workspace server &&
+      npm run db:seed --workspace server
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: SESSION_SECRET
+        generateValue: true
+      # Neon `production` branch. Set these in the Render dashboard; never commit them.
+      - key: DATABASE_URL # pooled connection (host contains -pooler)
+        sync: false
+      - key: DIRECT_URL # direct connection, used by migrations
+        sync: false
