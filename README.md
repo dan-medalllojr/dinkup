@@ -1,6 +1,8 @@
 # Dinkup
 
-**Find a pickleball game in Cebu.** A PWA for finding opponents, posting games at local courts, and leveling up through confirmed wins.
+**Find a pickleball game in Cebu.** Live at **https://dinkup.onrender.com**
+
+A PWA for finding opponents, posting games at local courts, and leveling up through confirmed wins.
 
 Built as a vibe-coding portfolio project. See [`docs/PLAN.md`](docs/PLAN.md) for the full plan and [`docs/log/`](docs/log/) for the step-by-step build log (prompts, what the AI got right, what had to be fixed).
 

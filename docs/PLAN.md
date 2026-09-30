@@ -117,7 +117,7 @@ Roughly one vibe-coding session per step. One commit (or PR) per step, with a ma
 6. **Game page:** players list, directions link, comments. ✅ Done. Only players can post, the host moderates, a per-user rate limit applies, and the thread refreshes every 20 s.
 7. **Demo data:** demo users + rolling upcoming games, "Try the demo" button. ✅ Done. Each "Try the demo" click gets its own 24-hour account, demo games are labeled so real players don't turn up for them, and the server tops up the week on startup and every hour.
 8. **PWA polish:** manifest, icons, install prompt, offline fallback page, mobile layout check. ✅ Done. Installable, the app shell works offline, API responses are never cached, updates wait for a tap on Reload, and every page was checked at 320 and 390 px in light and dark.
-9. **Deploy:** go live and invite a few real players to try it.
+9. **Deploy:** go live and invite a few real players to try it. ✅ Live at https://dinkup.onrender.com (Render free plan, Singapore; Neon `production` branch). Inviting players is next.
 10. **Results + leveling:** result reporting, loser confirmation, skill points, level-ups, and anti-boosting guards (see below). Test every guard.
     Also lock self-editing of skill level once a player has any confirmed result (until then it's a self-assessment). Otherwise anyone could skip the leveling system from the profile page.
 
