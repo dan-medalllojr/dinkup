@@ -59,13 +59,13 @@ Chat, tournaments, push notifications, photo uploads. Add later if the core work
 | Frontend | React + Vite + React Router |
 | PWA | `vite-plugin-pwa` (manifest, service worker, install prompt) |
 | Backend | Node.js + Express (JSON API) |
-| Database | PostgreSQL + Prisma (local via Docker Compose) |
+| Database | PostgreSQL on Neon (dev, test, and prod) + Prisma |
 | Auth | `express-session` + `connect-pg-simple` (Postgres session store), httpOnly `SameSite=Lax` cookie, bcrypt password hashing, `express-rate-limit` on auth routes |
 | Validation | Zod schemas in `shared/`, used by both the API and client forms |
 | Maps | Leaflet + OpenStreetMap via `react-leaflet` |
 | Location | Browser Geolocation API; distance sort via haversine in JS (no PostGIS needed at this scale) |
 | Tests | Vitest + Supertest against a test database |
-| Hosting | Render / Railway / Fly.io for the Node app; Neon or Supabase for Postgres (check current free-tier limits — some free DBs expire) |
+| Hosting | Render / Railway / Fly.io for the Node app; Neon for Postgres (free: 0.5 GB, 100 CU-hours/month, sleeps after 5 min idle) |
 
 ## Project Layout
 
@@ -107,7 +107,7 @@ Notes:
 
 Roughly one vibe-coding session per step. One commit (or PR) per step, with a matching `docs/log/step-N.md`.
 
-1. **Setup + auth:** monorepo, Docker Postgres, Prisma schema for users, register / login / logout, profile page with skill level and format.
+1. **Setup + auth:** monorepo, Postgres, Prisma schema for users, register / login / logout, profile page with skill level and format.
 2. **Courts:** courts table, seed real Cebu courts (hand-curated — OSM has little pickleball data for Cebu), map showing them. Expect to fix Leaflet's default marker icons under Vite. ✅ Done with 4 verified pins; ~18 more venues listed in `server/prisma/data/courts.ts` waiting for coordinates.
 3. **Post a game:** pick a court on the map, set date/time/duration, format, min skill level. Host auto-joins.
 4. **Browse games:** list + map view, filters by date and skill, sort by distance. Guest-readable.

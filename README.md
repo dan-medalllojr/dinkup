@@ -17,24 +17,23 @@ docs/     plan + build log
 
 ## Running locally
 
-Requires Node 22+ and Docker.
+Requires Node 22+ and a free [Neon](https://neon.com) Postgres project.
 
 ```bash
 npm install
-cp server/.env.example server/.env   # then set SESSION_SECRET
-npm run db:up                         # Postgres on :5432 (creates dinkup + dinkup_test)
-npm run db:migrate --workspace server
+cp server/.env.example server/.env    # fill in the Neon URLs and SESSION_SECRET
+npm run db:deploy --workspace server  # create tables
 npm run db:seed --workspace server    # real Cebu courts
 npm run dev                           # API on :3000, app on http://localhost:5173
 ```
 
-### Using Neon instead of local Postgres
+`server/.env` needs three connection strings from Neon:
 
-1. Create a Neon project (Singapore region is closest to Cebu).
-2. In `server/.env`, set `DATABASE_URL` to the **pooled** connection string (host contains `-pooler`) and `DIRECT_URL` to the **direct** one.
-3. `npm run db:deploy --workspace server && npm run db:seed --workspace server`
-
-The app connects through the pooler; Prisma's CLI (migrations, Studio) uses `DIRECT_URL`. Tests always use the local `dinkup_test` database and refuse to run against any database whose name doesn't end in `_test`.
+| Variable | Which Neon string | Used by |
+|---|---|---|
+| `DATABASE_URL` | Pooled (host contains `-pooler`) | The running app |
+| `DIRECT_URL` | Direct | Prisma CLI: migrations, Studio |
+| `TEST_DATABASE_URL` | Direct, to a separate `dinkup_test` database | Tests (must end in `_test`; they wipe every table) |
 
 The Vite dev server proxies `/api` to Express, so the app and API share one origin in development and production.
 
@@ -45,7 +44,7 @@ The Vite dev server proxies `/api` to Express, so the app and API share one orig
 | `npm run dev` | API (tsx watch) + client (Vite) |
 | `npm run db:deploy --workspace server` | Apply migrations without prompts (Neon / production) |
 | `npm run db:seed --workspace server` | Upsert courts from `server/prisma/data/courts.ts` (safe to re-run) |
-| `npm test` | API tests (Vitest + Supertest) against `dinkup_test` |
+| `npm test` | API tests (Vitest + Supertest) against the `dinkup_test` database |
 | `npm run typecheck` | Typecheck all workspaces |
 | `npm run build` | Build client, then bundle server |
 | `npm start` | Run the production server (serves the built client) |
