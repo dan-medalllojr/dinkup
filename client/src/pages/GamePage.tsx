@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router';
-import { directionsUrl, SKILL_LABELS, type Game, type GameDisplayStatus } from '@dinkup/shared';
+import { Link, useLocation, useParams } from 'react-router';
+import { directionsUrl, meetsMinLevel, SKILL_LABELS, type Game, type GameDisplayStatus } from '@dinkup/shared';
 import { Avatar } from '../components/Avatar.tsx';
 import { api, ApiError } from '../lib/api.ts';
 import { useAuth } from '../lib/auth.tsx';
@@ -18,8 +18,9 @@ export function GamePage() {
   const { user } = useAuth();
   const [game, setGame] = useState<Game | null>(null);
   const [error, setError] = useState('');
+  const location = useLocation();
   const [actionError, setActionError] = useState('');
-  const [cancelling, setCancelling] = useState(false);
+  const [busy, setBusy] = useState<'join' | 'leave' | 'cancel' | null>(null);
 
   useEffect(() => {
     setGame(null);
@@ -29,17 +30,29 @@ export function GamePage() {
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Something went wrong'));
   }, [id]);
 
-  async function cancel() {
-    if (!game || !window.confirm('Cancel this game? Players who joined will see it as cancelled.')) return;
-    setCancelling(true);
+  // Join, leave, and cancel all return the updated game, so the page re-renders
+  // from the server's view (e.g. someone else took the last spot meanwhile).
+  async function act(action: 'join' | 'leave' | 'cancel', confirmText?: string) {
+    if (!game || (confirmText && !window.confirm(confirmText))) return;
+    setBusy(action);
     setActionError('');
     try {
-      const res = await api<{ game: Game }>('POST', `/games/${game.id}/cancel`);
+      const res = await api<{ game: Game }>('POST', `/games/${game.id}/${action}`);
       setGame(res.game);
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : 'Something went wrong');
+      // The page may be stale; refresh so it shows why this failed.
+      api<{ game: Game }>('GET', `/games/${game.id}`)
+        .then((res) => {
+          setGame(res.game);
+          // Explain the common race in plain words instead of a bare "full".
+          if (action === 'join' && res.game.status === 'full') {
+            setActionError('Sorry, someone took the last spot just before you.');
+          }
+        })
+        .catch(() => {});
     } finally {
-      setCancelling(false);
+      setBusy(null);
     }
   }
 
@@ -47,6 +60,9 @@ export function GamePage() {
   if (!game) return <p className="muted">Loading…</p>;
 
   const isHost = user?.id === game.host.id;
+  const isPlayer = !!user && game.players.some((p) => p.id === user.id);
+  const levelOk = !user || meetsMinLevel(user.skillLevel, game.minSkillLevel);
+  const joinable = game.status === 'open';
   const openSpots = game.capacity - game.players.length;
   const emptySlots = game.status === 'cancelled' ? 0 : Math.max(openSpots, 0);
 
@@ -98,14 +114,56 @@ export function GamePage() {
         </ul>
       </section>
 
-      {isHost && game.status !== 'cancelled' && game.status !== 'completed' ? (
-        <section className="stack">
-          {actionError ? <p className="form-error">{actionError}</p> : null}
-          <button className="button button-ghost button-danger button-block" onClick={cancel} disabled={cancelling}>
-            {cancelling ? 'Cancelling…' : 'Cancel game'}
+      <section className="stack game-actions">
+        {actionError ? (
+          <p className="form-error" role="alert">
+            {actionError}
+          </p>
+        ) : null}
+
+        {!user && joinable ? (
+          <Link to="/login" state={{ from: location.pathname }} className="button button-block">
+            Log in to join
+          </Link>
+        ) : null}
+
+        {user && !isPlayer && joinable && levelOk ? (
+          <button className="button button-block" onClick={() => act('join')} disabled={busy !== null}>
+            {busy === 'join' ? 'Joining…' : 'Join game'}
           </button>
-        </section>
-      ) : null}
+        ) : null}
+
+        {user && !isPlayer && joinable && !levelOk ? (
+          <p className="notice">
+            This game is for {game.minSkillLevel}+ players. You're {user.skillLevel}, so you can't join this one.
+          </p>
+        ) : null}
+
+        {!isPlayer && game.status === 'full' && !actionError ? <p className="notice">This game is full.</p> : null}
+
+        {isPlayer && !isHost && (game.status === 'open' || game.status === 'full') ? (
+          <>
+            <p className="notice notice-ok">You're in this game.</p>
+            <button
+              className="button button-ghost button-block"
+              onClick={() => act('leave', 'Leave this game? Your spot will open up for someone else.')}
+              disabled={busy !== null}
+            >
+              {busy === 'leave' ? 'Leaving…' : 'Leave game'}
+            </button>
+          </>
+        ) : null}
+
+        {isHost && (game.status === 'open' || game.status === 'full') ? (
+          <button
+            className="button button-ghost button-danger button-block"
+            onClick={() => act('cancel', 'Cancel this game? Players who joined will see it as cancelled.')}
+            disabled={busy !== null}
+          >
+            {busy === 'cancel' ? 'Cancelling…' : 'Cancel game'}
+          </button>
+        ) : null}
+      </section>
     </>
   );
 }

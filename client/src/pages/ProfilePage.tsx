@@ -1,7 +1,9 @@
-import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
-import { updateProfileSchema, type PreferredFormat, type SkillLevel } from '@dinkup/shared';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { updateProfileSchema, type Game, type PreferredFormat, type SkillLevel } from '@dinkup/shared';
 import { Avatar } from '../components/Avatar.tsx';
+import { GameCard } from '../components/GameCard.tsx';
+import { api } from '../lib/api.ts';
 import { SelectField, TextField } from '../components/Field.tsx';
 import { useAuth } from '../lib/auth.tsx';
 import { errorsFromApi, validate, type FieldErrors } from '../lib/forms.ts';
@@ -22,6 +24,13 @@ export function ProfilePage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [myGames, setMyGames] = useState<Game[] | null>(null);
+
+  useEffect(() => {
+    api<{ games: Game[] }>('GET', '/games/mine')
+      .then((res) => setMyGames(res.games))
+      .catch(() => setMyGames([]));
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -66,6 +75,30 @@ export function ProfilePage() {
             </span>
           </div>
         </div>
+      </section>
+
+      <section className="home-games">
+        <div className="section-header">
+          <h2>Your upcoming games</h2>
+          <Link to="/games" className="small">
+            Find games
+          </Link>
+        </div>
+        {myGames === null ? (
+          <p className="muted">Loading…</p>
+        ) : myGames.length === 0 ? (
+          <p className="card muted">
+            You're not in any upcoming games. <Link to="/games">Find one</Link> or <Link to="/games/new">post your own</Link>.
+          </p>
+        ) : (
+          <ul className="game-list">
+            {myGames.map((g) => (
+              <li key={g.id}>
+                <GameCard game={g} />
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="card">

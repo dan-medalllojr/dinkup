@@ -65,3 +65,15 @@ export async function findScheduleClash(
 export async function lockUser(tx: Prisma.TransactionClient, userId: string) {
   await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId}::uuid FOR UPDATE`;
 }
+
+/**
+ * Row-lock a game for the rest of the transaction. Joins, leaves, and cancels
+ * on the same game run one at a time, so two people can't take the last spot.
+ *
+ * Lock order is always user, then game. Every path that takes both locks
+ * takes them in that order, so two transactions can't deadlock waiting on
+ * each other.
+ */
+export async function lockGame(tx: Prisma.TransactionClient, gameId: string) {
+  await tx.$queryRaw`SELECT id FROM games WHERE id = ${gameId}::uuid FOR UPDATE`;
+}

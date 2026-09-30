@@ -379,3 +379,7 @@ fieldset.segmented legend { padding: 0; margin-bottom: 0.3rem; font-weight: 600;
 
 .home-games { display: flex; flex-direction: column; }
 .empty-state h2 { margin-bottom: 0.4rem; }
+
+.notice { margin: 0; padding: 0.75rem 1rem; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+.notice-ok { border-color: var(--green); color: var(--text); font-weight: 600; }
+.badge-mine { background: var(--green); border-color: var(--green); color: #fff; }

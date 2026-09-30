@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
-import { TIMEZONE, type GameListItem } from '@dinkup/shared';
+import { TIMEZONE, type Game, type GameListItem } from '@dinkup/shared';
+import { useAuth } from '../lib/auth.tsx';
 import { Avatar } from './Avatar.tsx';
 
 const weekday = new Intl.DateTimeFormat('en-PH', { timeZone: TIMEZONE, weekday: 'short' });
@@ -10,7 +11,9 @@ export function formatKm(km: number) {
   return `${km < 10 ? km.toFixed(1) : Math.round(km)} km`;
 }
 
-export function GameCard({ game }: { game: GameListItem }) {
+export function GameCard({ game }: { game: GameListItem | (Game & { distanceKm?: null }) }) {
+  const { user } = useAuth();
+  const isMine = !!user && game.players.some((p) => p.id === user.id);
   const start = new Date(game.startsAt);
   const spotsLeft = game.capacity - game.players.length;
 
@@ -30,7 +33,11 @@ export function GameCard({ game }: { game: GameListItem }) {
         <span className="game-tags">
           <span className="badge">{game.format === 'singles' ? 'Singles' : 'Doubles'}</span>
           <span className="badge">{game.minSkillLevel ? `${game.minSkillLevel}+` : 'Any level'}</span>
-          {game.status === 'full' ? (
+          {game.status === 'cancelled' ? (
+            <span className="badge badge-cancelled">Cancelled</span>
+          ) : isMine ? (
+            <span className="badge badge-mine">You're in</span>
+          ) : game.status === 'full' ? (
             <span className="badge badge-full">Full</span>
           ) : (
             <span className="badge badge-open">
@@ -40,7 +47,7 @@ export function GameCard({ game }: { game: GameListItem }) {
         </span>
       </div>
       <div className="game-card-side">
-        {game.distanceKm !== null ? <span className="distance">{formatKm(game.distanceKm)}</span> : null}
+        {game.distanceKm != null ? <span className="distance">{formatKm(game.distanceKm)}</span> : null}
         <span className="avatar-stack" aria-label={`${game.players.length} of ${game.capacity} players`}>
           {game.players.slice(0, 4).map((p) => (
             <Avatar key={p.id} name={p.name} photoUrl={p.photoUrl} size={24} />
