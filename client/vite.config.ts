@@ -31,19 +31,37 @@ export default defineConfig({
       workbox: {
         // Precache the app shell (HTML, JS, CSS, icons) so it opens offline.
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        // ...except the map engine (MapLibre, ~280 KB gzipped): don't make every
+        // install download it up front on mobile data. It's cached the first
+        // time someone opens a map instead (runtime rule below).
+        globIgnores: ['**/CourtMap-*.{js,css}', '**/maplibre-gl-worker-*.js'],
         // Client-side routes fall back to the cached index.html, except the
         // API, which must always hit the network.
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         // No runtime caching of /api: stale game lists or player counts would
         // be worse than a clear "you're offline" message. Map tiles aren't
-        // cached either (OpenStreetMap's tile policy discourages it).
-        runtimeCaching: [],
+        // cached either; the map needs a connection.
+        runtimeCaching: [
+          {
+            // Content-hashed, so cache-first is safe: a new build has a new name.
+            urlPattern: ({ url }) => url.origin === self.location.origin && /\/assets\/(CourtMap|maplibre-gl-worker)-.*\.(js|css)$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'map-engine', expiration: { maxEntries: 4 } },
+          },
+        ],
         cleanupOutdatedCaches: true,
       },
       devOptions: { enabled: false },
     }),
   ],
+  // MapLibre's worker is an ES module (it imports shared code).
+  worker: { format: 'es' },
+  build: {
+    // The one big chunk is the MapLibre map engine (~1 MB raw, ~280 KB gzipped).
+    // It's lazy-loaded on map pages only, so raise the warning past it.
+    chunkSizeWarningLimit: 1100,
+  },
   server: {
     port: 5173,
     // Same-origin in dev too, so session cookies behave like production.

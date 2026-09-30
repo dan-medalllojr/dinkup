@@ -34,3 +34,71 @@ export const MAX_COURTS_ADDED_PER_DAY = 5;
 
 /** A search or reverse-geocoding result (via the server's Nominatim proxy). */
 export type Place = { label: string; address: string; city: string; lat: number; lng: number };
+
+// --- Locations pasted by players ----------------------------------------------
+
+export type PastedLocation = LatLng & {
+  /** Place name from a Google Maps link, if it had one. */
+  name?: string;
+  /** True when only the map's view center was found, not a dropped pin. */
+  approximate: boolean;
+};
+
+const NUM = String.raw`(-?\d{1,3}\.\d+)`;
+
+/** "10.3242, 123.9268" (as copied from Google Maps' right-click menu). */
+export function parseCoordinates(text: string): LatLng | null {
+  const m = text.trim().match(new RegExp(String.raw`^${NUM}\s*,\s*${NUM}$`));
+  if (!m) return null;
+  const lat = Number(m[1]);
+  const lng = Number(m[2]);
+  return Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? { lat, lng } : null;
+}
+
+const GOOGLE_MAPS_HOST = /^(www\.|maps\.)?google\.(com|com\.ph)$/;
+const SHORT_LINK_HOSTS = new Set(['maps.app.goo.gl', 'goo.gl']);
+
+export function isGoogleMapsHost(host: string) {
+  return GOOGLE_MAPS_HOST.test(host) || SHORT_LINK_HOSTS.has(host);
+}
+export function isShortMapsLink(url: URL) {
+  return SHORT_LINK_HOSTS.has(url.hostname);
+}
+
+/**
+ * Pull a location out of a full Google Maps URL, without calling Google.
+ * Not an official format, so this tries the known shapes in order of
+ * accuracy: the place pin (!3d…!4d…), a query (?q=lat,lng), then the view
+ * center (@lat,lng), which is only approximate.
+ */
+export function parseGoogleMapsUrl(raw: string): PastedLocation | null {
+  let url: URL;
+  try {
+    url = new URL(raw.trim());
+  } catch {
+    return null;
+  }
+  if (!GOOGLE_MAPS_HOST.test(url.hostname)) return null;
+  const text = decodeURIComponent(url.href);
+
+  const nameMatch = url.pathname.match(/\/maps\/place\/([^/@]+)/);
+  const rawName = nameMatch?.[1] && decodeURIComponent(nameMatch[1]).replace(/\+/g, ' ').trim();
+  const name = rawName && !parseCoordinates(rawName) ? rawName : undefined;
+
+  const pins = [...text.matchAll(new RegExp(String.raw`!3d${NUM}!4d${NUM}`, 'g'))];
+  const pin = pins.at(-1);
+  if (pin) return { lat: Number(pin[1]), lng: Number(pin[2]), name, approximate: false };
+
+  for (const key of ['q', 'query', 'll', 'destination', 'daddr', 'center']) {
+    const value = url.searchParams.get(key);
+    const coords = value ? parseCoordinates(value.replace(/\s+/g, ' ')) : null;
+    if (coords) return { ...coords, name, approximate: false };
+  }
+
+  const searchPath = url.pathname.match(new RegExp(String.raw`/maps/search/${NUM},\+?\s*${NUM}`));
+  if (searchPath) return { lat: Number(searchPath[1]), lng: Number(searchPath[2]), name, approximate: false };
+
+  const view = text.match(new RegExp(String.raw`@${NUM},${NUM}`));
+  if (view) return { lat: Number(view[1]), lng: Number(view[2]), name, approximate: true };
+  return null;
+}

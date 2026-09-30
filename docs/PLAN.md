@@ -27,7 +27,7 @@ Apps like this already exist (e.g. Pickleheads), so the differentiator is a **lo
 - Skill level is one ordered scale: `3.0, 3.5, 4.0, 4.5, 5.0`, shown with labels (3.0 = Beginner, 3.5 = Novice, 4.0 = Intermediate, 4.5 = Advanced, 5.0 = Expert)
 
 **Post a game**
-- Court picked on a map
+- Court picked on a map, or **added by the player** if it's missing (public, labeled, deduplicated; see change log 1)
 - Date, start time, duration (default 90 min)
 - Format: singles (capacity 2) or doubles (capacity 4). Capacity is total players **including the host**; the host auto-joins.
 - Skill level wanted (min level, optional)
@@ -62,8 +62,9 @@ Chat, tournaments, push notifications, photo uploads. Add later if the core work
 | Database | PostgreSQL on Neon (dev, test, and prod) + Prisma |
 | Auth | `express-session` + `connect-pg-simple` (Postgres session store), httpOnly `SameSite=Lax` cookie, bcrypt password hashing, `express-rate-limit` on auth routes |
 | Validation | Zod schemas in `shared/`, used by both the API and client forms |
-| Maps | Leaflet + OpenStreetMap via `react-leaflet` |
+| Maps | MapLibre GL + OpenFreeMap vector tiles (Liberty light / Fiord dark); originally Leaflet + OSM raster tiles, switched after launch (see `docs/log/change-2-maplibre.md`) |
 | Location | Browser Geolocation API; distance sort via haversine in JS (no PostGIS needed at this scale) |
+| Place search | Photon (as-you-type), Nominatim (address for a dropped pin), and pasted Google Maps links or coordinates, all proxied through `/api/geo` |
 | Tests | Vitest + Supertest against a test database |
 | Hosting | Render / Railway / Fly.io for the Node app; Neon for Postgres (free: 0.5 GB, 100 CU-hours/month, sleeps after 5 min idle) |
 

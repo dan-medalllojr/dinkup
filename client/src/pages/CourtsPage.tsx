@@ -48,12 +48,6 @@ export function CourtsPage() {
     return withDistance;
   }, [courts, geo.location]);
 
-  // Picking from the list: bring the map back into view so the pin is visible.
-  function selectFromList(id: string) {
-    setSelectedId(id);
-    document.querySelector('.map-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
   if (error) return <p className="card">{error}</p>;
 
   const selected = courts?.find((c) => c.id === selectedId) ?? null;
@@ -110,7 +104,7 @@ export function CourtsPage() {
         <ul className="court-list">
           {sorted.map(({ court, km }) => (
             <li key={court.id} className={`card court-item${court.id === selectedId ? ' court-item-active' : ''}`}>
-              <button className="court-item-main" onClick={() => selectFromList(court.id)}>
+              <button className="court-item-main" onClick={() => setSelectedId(court.id)}>
                 <span className="court-name">{court.name}</span>
                 <span className="muted small">{[court.address, court.city].filter(Boolean).join(', ')}</span>
                 {describe(court) ? <span className="muted small">{describe(court)}</span> : null}

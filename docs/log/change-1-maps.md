@@ -1,5 +1,7 @@
 # Change 1: Any court, friendlier maps, games on the map
 
+> **Update:** the map engine and tiles were replaced in [change 2](change-2-maplibre.md) (MapLibre + OpenFreeMap), and search moved to Photon with pasted Google Maps links. The court features below are unchanged.
+
 **Date:** 2026-09-30 (after launch)
 
 ## Prompt

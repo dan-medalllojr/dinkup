@@ -8,7 +8,7 @@ Built as a vibe-coding portfolio project. See [`docs/PLAN.md`](docs/PLAN.md) for
 
 ## Stack
 
-React + Vite + React Router · Express 5 · PostgreSQL + Prisma 7 · Zod (shared between client and server) · TypeScript · npm workspaces
+React + Vite + React Router · Express 5 · PostgreSQL (Neon) + Prisma 7 · Zod (shared between client and server) · MapLibre GL + OpenFreeMap · TypeScript · npm workspaces
 
 ```
 client/   React app (Vite)
@@ -50,6 +50,20 @@ The Vite dev server proxies `/api` to Express, so the app and API share one orig
 | `npm run typecheck` | Typecheck all workspaces |
 | `npm run build` | Build client, then bundle server |
 | `npm start` | Run the production server (serves the built client) |
+
+## Maps and place search
+
+Everything here is free with no API keys:
+
+| What | Service | Notes |
+|---|---|---|
+| Map engine | [MapLibre GL](https://maplibre.org) | Runs in the browser (WebGL). Lazy-loaded on map pages only and cached on first use. |
+| Map tiles and styles | [OpenFreeMap](https://openfreemap.org) | **Liberty** (light), **Fiord** (dark). No key, no request limits. |
+| Search as you type | [Photon](https://photon.komoot.io) | Via `/api/geo/search`, limited to Cebu, 24 h cache. |
+| Address for a dropped pin | [Nominatim](https://nominatim.org) | Via `/api/geo/reverse`, 1 request/second per its usage policy. |
+| Pasted Google Maps links | Parsed on the server | Via `/api/geo/link`. Short links are followed only within Google Maps domains (SSRF guard). No Google API is called. |
+
+Courts can be added by players (public, labeled "Added by …"). See [`docs/log/change-1-maps.md`](docs/log/change-1-maps.md) and [`docs/log/change-2-maplibre.md`](docs/log/change-2-maplibre.md), including why the Google Places API wasn't used: its data may only be shown on a Google map, and its coordinates can be kept for only 30 days.
 
 ## Deploying (Render + Neon)
 

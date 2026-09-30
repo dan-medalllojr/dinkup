@@ -17,7 +17,9 @@ export function AddCourtPanel({ add, onUseExisting }: { add: AddCourtState; onUs
       }}
     >
       <p className="notice">
-        {add.pin ? 'Drag the orange pin to the exact spot if needed.' : 'Tap the map where the court is, or search for the place above.'}
+        {add.pin
+          ? 'Drag the orange pin to the exact spot if needed.'
+          : 'Tap the map where the court is, or search above. Not on the map? Paste a Google Maps link or coordinates into the search box.'}
       </p>
       {add.outside ? <p className="form-error">That spot is outside Cebu. Dinkup only lists courts in Cebu.</p> : null}
       {add.nearby.length > 0 ? (
