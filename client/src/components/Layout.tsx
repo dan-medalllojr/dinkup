@@ -15,9 +15,14 @@ export function Layout() {
         <nav className="topnav">
           <NavLink to="/courts">Courts</NavLink>
           {loading ? null : user ? (
-            <NavLink to="/profile" className="topnav-profile" aria-label="Your profile">
-              <Avatar name={user.name} photoUrl={user.photoUrl} size={32} />
-            </NavLink>
+            <>
+              <NavLink to="/games/new" className="button button-small">
+                Post game
+              </NavLink>
+              <NavLink to="/profile" className="topnav-profile" aria-label="Your profile">
+                <Avatar name={user.name} photoUrl={user.photoUrl} size={32} />
+              </NavLink>
+            </>
           ) : (
             <>
               <NavLink to="/login">Log in</NavLink>

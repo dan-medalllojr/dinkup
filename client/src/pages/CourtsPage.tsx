@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router';
 import { directionsUrl, distanceKm, type Court } from '@dinkup/shared';
 import { CourtMap } from '../components/CourtMap.tsx';
 import { api, ApiError } from '../lib/api.ts';
@@ -76,6 +77,9 @@ export function CourtsPage() {
                 <a href={directionsUrl(court)} target="_blank" rel="noreferrer" className="small">
                   Directions
                 </a>
+                <Link to={`/games/new?court=${court.id}`} className="small">
+                  Post a game
+                </Link>
               </div>
             </li>
           ))}

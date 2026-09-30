@@ -4,6 +4,7 @@ import { env } from './env.ts';
 import { errorHandler, notFound, requireJson } from './middleware/errors.ts';
 import { authRouter } from './routes/auth.ts';
 import { courtsRouter } from './routes/courts.ts';
+import { gamesRouter } from './routes/games.ts';
 import { usersRouter } from './routes/users.ts';
 import { sessionMiddleware } from './session.ts';
 
@@ -24,6 +25,7 @@ export function createApp() {
   api.use('/auth', authRouter);
   api.use('/users', usersRouter);
   api.use('/courts', courtsRouter);
+  api.use('/games', gamesRouter);
   api.use(notFound);
   app.use('/api', api);
 

@@ -17,24 +17,36 @@ const courtIcon = (active: boolean) =>
 
 const userIcon = L.divIcon({ className: '', html: '<span class="map-user"></span>', iconSize: [18, 18], iconAnchor: [9, 9] });
 
-// Zoom to show every court once they've loaded, instead of a fixed center
-// that can leave pins (e.g. Lapu-Lapu) off-screen on a phone.
-function FitToCourts({ courts }: { courts: Court[] }) {
+// On first load: jump straight to a preselected court, otherwise zoom to show
+// every court (a fixed center can leave pins, e.g. Lapu-Lapu, off-screen).
+function InitialView({ courts, selected }: { courts: Court[]; selected: Court | null }) {
   const map = useMap();
-  const fitted = useRef(false);
+  const done = useRef(false);
   useEffect(() => {
-    if (fitted.current || courts.length === 0) return;
-    fitted.current = true;
-    map.fitBounds(L.latLngBounds(courts.map((c) => [c.lat, c.lng])), { padding: [32, 32], maxZoom: 14 });
-  }, [map, courts]);
+    if (done.current || courts.length === 0) return;
+    done.current = true;
+    if (selected) map.setView([selected.lat, selected.lng], 15, { animate: false });
+    else map.fitBounds(L.latLngBounds(courts.map((c) => [c.lat, c.lng])), { padding: [32, 32], maxZoom: 14 });
+  }, [map, courts, selected]);
   return null;
 }
 
-function FlyTo({ target }: { target: LatLng | null }) {
+// Depends on the court's id and coordinates, not the object, so re-renders
+// don't re-fly. Leaflet's flyTo produces NaN coordinates (and crashes) if
+// it's started while a previous fly animation is still running, so stop
+// any animation first and skip if we're already there.
+function FlyTo({ target }: { target: Court | null }) {
   const map = useMap();
+  const id = target?.id;
+  const lat = target?.lat;
+  const lng = target?.lng;
   useEffect(() => {
-    if (target) map.flyTo([target.lat, target.lng], Math.max(map.getZoom(), 15), { duration: 0.6 });
-  }, [map, target]);
+    if (id === undefined || lat === undefined || lng === undefined) return;
+    map.stop();
+    const zoom = Math.max(Math.round(map.getZoom()), 15);
+    if (map.getCenter().distanceTo([lat, lng]) < 5 && map.getZoom() === zoom) return;
+    map.flyTo([lat, lng], zoom, { duration: 0.6 });
+  }, [map, id, lat, lng]);
   return null;
 }
 
@@ -73,7 +85,7 @@ export function CourtMap({ courts, selectedId, onSelect, userLocation }: Props) 
         </Marker>
       ))}
       {userLocation ? <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon} /> : null}
-      <FitToCourts courts={courts} />
+      <InitialView courts={courts} selected={selected} />
       <FlyTo target={selected} />
     </MapContainer>
   );

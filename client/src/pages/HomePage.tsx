@@ -10,7 +10,14 @@ export function HomePage() {
         <h1>Find a pickleball game in Cebu.</h1>
         <p>Post a game at your court, fill the open slots, and level up with every confirmed win.</p>
         {user ? (
-          <p className="hero-greeting">Welcome back, {user.name.split(' ')[0]}.</p>
+          <>
+            <p className="hero-greeting">Welcome back, {user.name.split(' ')[0]}.</p>
+            <div className="hero-actions">
+              <Link to="/games/new" className="button">
+                Post a game
+              </Link>
+            </div>
+          </>
         ) : (
           <div className="hero-actions">
             <Link to="/register" className="button">
@@ -25,7 +32,7 @@ export function HomePage() {
 
       <section className="card">
         <h2>Upcoming games</h2>
-        <p className="muted">Games near you will show up here once game posting is live.</p>
+        <p className="muted">Browsing and joining games near you is coming next.</p>
       </section>
 
       <Link to="/courts" className="card card-link">
