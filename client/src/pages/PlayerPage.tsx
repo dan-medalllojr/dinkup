@@ -4,11 +4,13 @@ import type { PublicUser } from '@dinkup/shared';
 import { Avatar } from '../components/Avatar.tsx';
 import { api, ApiError } from '../lib/api.ts';
 import { FORMAT_LABELS, levelLabel } from '../lib/labels.ts';
+import { useReconnect } from '../lib/useReconnect.ts';
 
 export function PlayerPage() {
   const { id } = useParams();
   const [player, setPlayer] = useState<PublicUser | null>(null);
   const [error, setError] = useState('');
+  const reconnect = useReconnect();
 
   useEffect(() => {
     setPlayer(null);
@@ -16,7 +18,7 @@ export function PlayerPage() {
     api<{ user: PublicUser }>('GET', `/users/${id}`)
       .then((res) => setPlayer(res.user))
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Something went wrong'));
-  }, [id]);
+  }, [id, reconnect]);
 
   if (error) return <p className="card">{error}</p>;
   if (!player) return <p className="muted">Loading…</p>;

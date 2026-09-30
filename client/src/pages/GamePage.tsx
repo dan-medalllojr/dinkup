@@ -6,6 +6,7 @@ import { Comments } from '../components/Comments.tsx';
 import { api, ApiError } from '../lib/api.ts';
 import { useAuth } from '../lib/auth.tsx';
 import { formatGameWhen } from '../lib/time.ts';
+import { useReconnect } from '../lib/useReconnect.ts';
 
 const STATUS_LABELS: Record<GameDisplayStatus, string> = {
   open: 'Open',
@@ -20,16 +21,19 @@ export function GamePage() {
   const [game, setGame] = useState<Game | null>(null);
   const [error, setError] = useState('');
   const location = useLocation();
+  const reconnect = useReconnect();
   const [actionError, setActionError] = useState('');
   const [busy, setBusy] = useState<'join' | 'leave' | 'cancel' | null>(null);
 
+  // Clear the game only when navigating to a different one, not on reconnect.
+  useEffect(() => setGame(null), [id]);
+
   useEffect(() => {
-    setGame(null);
     setError('');
     api<{ game: Game }>('GET', `/games/${id}`)
       .then((res) => setGame(res.game))
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Something went wrong'));
-  }, [id]);
+  }, [id, reconnect]);
 
   // Join, leave, and cancel all return the updated game, so the page re-renders
   // from the server's view (e.g. someone else took the last spot meanwhile).

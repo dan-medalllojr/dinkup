@@ -4,6 +4,7 @@ import { directionsUrl, distanceKm, type Court } from '@dinkup/shared';
 import { CourtMap } from '../components/CourtMap.tsx';
 import { api, ApiError } from '../lib/api.ts';
 import { useGeolocation } from '../lib/useGeolocation.ts';
+import { useReconnect } from '../lib/useReconnect.ts';
 
 const SETTING_LABELS = { indoor: 'Indoor', outdoor: 'Outdoor', covered: 'Covered' } as const;
 
@@ -19,12 +20,14 @@ export function CourtsPage() {
   const [error, setError] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const geo = useGeolocation();
+  const reconnect = useReconnect();
 
   useEffect(() => {
+    setError('');
     api<{ courts: Court[] }>('GET', '/courts')
       .then((res) => setCourts(res.courts))
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Something went wrong'));
-  }, []);
+  }, [reconnect]);
 
   // Nearest first once we know where the user is; alphabetical otherwise.
   const sorted = useMemo(() => {

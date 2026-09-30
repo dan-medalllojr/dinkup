@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { GameListItem } from '@dinkup/shared';
 import { api, ApiError } from './api.ts';
+import { useReconnect } from './useReconnect.ts';
 
 // Fetches /api/games for a query string. Aborts the previous request when the
 // query changes, so a slow old response can't overwrite a newer one.
@@ -8,6 +9,7 @@ export function useGames(query: string) {
   const [games, setGames] = useState<GameListItem[] | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const reconnect = useReconnect();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -23,7 +25,7 @@ export function useGames(query: string) {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [query]);
+  }, [query, reconnect]);
 
   return { games, error, loading };
 }

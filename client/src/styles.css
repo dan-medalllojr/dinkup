@@ -142,6 +142,7 @@ a { color: var(--green); }
   font: inherit;
   font-weight: 600;
   text-decoration: none;
+  white-space: nowrap; /* on narrow screens the container wraps instead */
   cursor: pointer;
 }
 .button:hover { background: var(--green-dark); }
@@ -189,7 +190,7 @@ form { display: flex; flex-direction: column; gap: 0.9rem; margin: 1rem 0; }
 .points-bar span { display: block; height: 100%; background: var(--lime); }
 
 
-.page-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.page-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; }
 .page-header h1 { margin: 0; }
 
 .card-link { display: block; color: inherit; text-decoration: none; }
@@ -249,6 +250,8 @@ form { display: flex; flex-direction: column; gap: 0.9rem; margin: 1rem 0; }
 .stack > .card > p { margin: 0; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 .row .field { min-width: 0; }
+/* Date and time inputs clip their value below ~150px each; stack them on small phones. */
+@media (max-width: 360px) { .row { grid-template-columns: 1fr; } }
 .section-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
 .section-header h2 { margin: 0; }
 
@@ -417,3 +420,44 @@ fieldset.segmented legend { padding: 0; margin-bottom: 0.3rem; font-weight: 600;
 .demo-cta { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
 .hero-actions .form-error { flex-basis: 100%; }
 .hero-actions { flex-wrap: wrap; }
+
+.install-banner { display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 1rem; }
+.install-banner img { border-radius: 10px; flex-shrink: 0; }
+.install-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.install-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; flex-shrink: 0; }
+
+.offline-banner {
+  position: sticky;
+  top: calc(52px + env(safe-area-inset-top));
+  z-index: 9;
+  padding: 0.5rem 1rem;
+  background: #fff4d6;
+  color: #5c4400;
+  font-size: 0.875rem;
+  text-align: center;
+  border-bottom: 1px solid #f0d58a;
+}
+@media (prefers-color-scheme: dark) {
+  .offline-banner { background: #3a2f10; color: #f5dc9a; border-color: #5c4a18; }
+}
+
+.toast {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: var(--text);
+  color: var(--surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+}
+.toast span { flex: 1; font-size: 0.9rem; }
+.toast .link-button { color: var(--surface); }
+@media (min-width: 720px) { .toast { bottom: 1.5rem; } }

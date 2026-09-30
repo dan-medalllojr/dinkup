@@ -1,12 +1,13 @@
 import { Link } from 'react-router';
 import { DemoButton } from '../components/DemoButton.tsx';
 import { GameCard } from '../components/GameCard.tsx';
+import { InstallBanner } from '../components/InstallBanner.tsx';
 import { useGames } from '../lib/useGames.ts';
 import { useAuth } from '../lib/auth.tsx';
 
 export function HomePage() {
   const { user } = useAuth();
-  const { games } = useGames('limit=3');
+  const { games, error } = useGames('limit=3');
 
   return (
     <>
@@ -32,6 +33,8 @@ export function HomePage() {
         )}
       </section>
 
+      <InstallBanner />
+
       <section className="home-games">
         <div className="section-header">
           <h2>Upcoming games</h2>
@@ -39,7 +42,9 @@ export function HomePage() {
             See all
           </Link>
         </div>
-        {games === null ? (
+        {error && games === null ? (
+          <p className="card muted">{error}</p>
+        ) : games === null ? (
           <p className="muted">Loading games…</p>
         ) : games.length === 0 ? (
           <p className="card muted">No games posted yet. {user ? <Link to="/games/new">Post the first one</Link> : null}</p>

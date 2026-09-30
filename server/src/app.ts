@@ -34,8 +34,23 @@ export function createApp() {
   // In production Express also serves the built client: one deploy, one domain.
   if (env.NODE_ENV === 'production') {
     const clientDist = path.resolve(import.meta.dirname, '../../client/dist');
-    app.use(express.static(clientDist, { index: false }));
+    app.use(
+      express.static(clientDist, {
+        index: false,
+        setHeaders(res, filePath) {
+          if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+            // Content-hashed filenames: safe to cache forever.
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          } else {
+            // sw.js, the manifest, and icons must be re-checked, or installed
+            // apps get stuck on an old version.
+            res.setHeader('Cache-Control', 'no-cache');
+          }
+        },
+      }),
+    );
     app.get('/{*splat}', (_req, res) => {
+      res.setHeader('Cache-Control', 'no-cache');
       res.sendFile(path.join(clientDist, 'index.html'));
     });
   }

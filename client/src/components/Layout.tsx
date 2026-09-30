@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router';
 import { useAuth } from '../lib/auth.tsx';
 import { Avatar } from './Avatar.tsx';
+import { PwaStatus } from './PwaStatus.tsx';
 
 // Small inline icons for the tab bar; stroke uses currentColor.
 const icon = (d: string) => (
@@ -59,6 +60,7 @@ export function Layout() {
           )}
         </div>
       </header>
+      <PwaStatus />
       <main className="page">
         <Outlet />
       </main>
