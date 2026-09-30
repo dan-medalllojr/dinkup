@@ -38,8 +38,9 @@ model User {
   isDemo          Boolean         @default(false) @map("is_demo")
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  hostedGames Game[]       @relation("HostedGames")
+  hostedGames Game[]        @relation("HostedGames")
   gamesJoined GamePlayer[]
+  comments    GameComment[]
 
   @@map("users")
 }
@@ -114,10 +115,11 @@ model Game {
   status        GameStatus  @default(open)
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  host    User         @relation("HostedGames", fields: [hostId], references: [id], onDelete: Cascade)
+  host     User          @relation("HostedGames", fields: [hostId], references: [id], onDelete: Cascade)
   // Restrict: a court with games can't be deleted out from under them.
-  court   Court        @relation(fields: [courtId], references: [id], onDelete: Restrict)
-  players GamePlayer[]
+  court    Court         @relation(fields: [courtId], references: [id], onDelete: Restrict)
+  players  GamePlayer[]
+  comments GameComment[]
 
   @@index([startsAt])
   @@index([hostId])
@@ -136,4 +138,18 @@ model GamePlayer {
   @@id([gameId, userId])
   @@index([userId])
   @@map("game_players")
+}
+
+model GameComment {
+  id        String   @id @default(uuid()) @db.Uuid
+  gameId    String   @map("game_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  body      String   @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([gameId, createdAt])
+  @@map("game_comments")
 }

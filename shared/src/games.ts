@@ -96,3 +96,20 @@ export const listGamesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 export type ListGamesQuery = z.input<typeof listGamesQuerySchema>;
+
+export const COMMENT_MAX_LENGTH = 500;
+
+export const createCommentSchema = z.object({
+  body: z
+    .string()
+    .trim()
+    .min(1, 'Write something first')
+    .max(COMMENT_MAX_LENGTH, `Keep it under ${COMMENT_MAX_LENGTH} characters`),
+});
+
+export type GameComment = {
+  id: string;
+  body: string;
+  createdAt: string;
+  author: PlayerSummary;
+};

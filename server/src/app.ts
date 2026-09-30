@@ -3,6 +3,7 @@ import express from 'express';
 import { env } from './env.ts';
 import { errorHandler, notFound, requireJson } from './middleware/errors.ts';
 import { authRouter } from './routes/auth.ts';
+import { commentsRouter } from './routes/comments.ts';
 import { courtsRouter } from './routes/courts.ts';
 import { gamesRouter } from './routes/games.ts';
 import { usersRouter } from './routes/users.ts';
@@ -25,6 +26,7 @@ export function createApp() {
   api.use('/auth', authRouter);
   api.use('/users', usersRouter);
   api.use('/courts', courtsRouter);
+  api.use('/games/:id/comments', commentsRouter);
   api.use('/games', gamesRouter);
   api.use(notFound);
   app.use('/api', api);

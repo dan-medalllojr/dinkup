@@ -114,7 +114,7 @@ Roughly one vibe-coding session per step. One commit (or PR) per step, with a ma
 5. **Join / leave:** capacity limits enforced in a transaction with a row lock on the game (`SELECT … FOR UPDATE`) so two people can't take the last spot at once. Tests for the race.
     Players below a game's minimum level **can't join** (decided 2026-09-30; may relax to a warning later).
     ✅ Done, plus a schedule-clash check for joiners and "Your upcoming games" on the profile.
-6. **Game page:** players list, directions link, comments.
+6. **Game page:** players list, directions link, comments. ✅ Done. Only players can post, the host moderates, a per-user rate limit applies, and the thread refreshes every 20 s.
 7. **Demo data:** demo users + rolling upcoming games, "Try the demo" button.
 8. **PWA polish:** manifest, icons, install prompt, offline fallback page, mobile layout check.
 9. **Deploy:** go live and invite a few real players to try it.

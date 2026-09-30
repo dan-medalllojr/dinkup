@@ -383,3 +383,31 @@ fieldset.segmented legend { padding: 0; margin-bottom: 0.3rem; font-weight: 600;
 .notice { margin: 0; padding: 0.75rem 1rem; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
 .notice-ok { border-color: var(--green); color: var(--text); font-weight: 600; }
 .badge-mine { background: var(--green); border-color: var(--green); color: #fff; }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.comments { display: flex; flex-direction: column; gap: 0.75rem; }
+.comments h2 { margin: 0; }
+.comment-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+.comment { display: flex; gap: 0.65rem; align-items: flex-start; }
+.comment-main { flex: 1; min-width: 0; }
+.comment-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.2rem 0.5rem; }
+.comment-author { font-weight: 700; color: var(--text); text-decoration: none; }
+.badge-host-small { font-size: 0.68rem; padding: 0 0.4rem; }
+.comment-delete { margin-left: auto; padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.8rem; cursor: pointer; }
+.comment-delete:hover { color: var(--danger); text-decoration: underline; }
+.comment-body { margin: 0.15rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.comment-form { margin: 0; gap: 0.4rem; }
+.comment-form textarea {
+  width: 100%;
+  min-height: 64px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  resize: vertical;
+}
+.comment-form textarea:focus { outline: 2px solid var(--green); outline-offset: 1px; }
+.comment-form-footer { display: flex; align-items: center; justify-content: space-between; }

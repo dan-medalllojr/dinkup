@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { directionsUrl, meetsMinLevel, SKILL_LABELS, type Game, type GameDisplayStatus } from '@dinkup/shared';
 import { Avatar } from '../components/Avatar.tsx';
+import { Comments } from '../components/Comments.tsx';
 import { api, ApiError } from '../lib/api.ts';
 import { useAuth } from '../lib/auth.tsx';
 import { formatGameWhen } from '../lib/time.ts';
@@ -164,6 +165,8 @@ export function GamePage() {
           </button>
         ) : null}
       </section>
+
+      <Comments gameId={game.id} hostId={game.host.id} isPlayer={isPlayer} />
     </>
   );
 }
