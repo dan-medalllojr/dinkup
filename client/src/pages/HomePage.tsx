@@ -1,8 +1,11 @@
 import { Link } from 'react-router';
+import { GameCard } from '../components/GameCard.tsx';
+import { useGames } from '../lib/useGames.ts';
 import { useAuth } from '../lib/auth.tsx';
 
 export function HomePage() {
   const { user } = useAuth();
+  const { games } = useGames('limit=3');
 
   return (
     <>
@@ -30,9 +33,26 @@ export function HomePage() {
         )}
       </section>
 
-      <section className="card">
-        <h2>Upcoming games</h2>
-        <p className="muted">Browsing and joining games near you is coming next.</p>
+      <section className="home-games">
+        <div className="section-header">
+          <h2>Upcoming games</h2>
+          <Link to="/games" className="small">
+            See all
+          </Link>
+        </div>
+        {games === null ? (
+          <p className="muted">Loading games…</p>
+        ) : games.length === 0 ? (
+          <p className="card muted">No games posted yet. {user ? <Link to="/games/new">Post the first one</Link> : null}</p>
+        ) : (
+          <ul className="game-list">
+            {games.map((g) => (
+              <li key={g.id}>
+                <GameCard game={g} />
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <Link to="/courts" className="card card-link">

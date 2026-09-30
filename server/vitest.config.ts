@@ -16,5 +16,9 @@ export default defineConfig({
     globalSetup: ['test/global-setup.ts'],
     // Test files share one database, so run them one at a time.
     fileParallelism: false,
+    // The test database is on Neon (Singapore), so each query is a network
+    // round trip. Vitest's 5s default is tight for multi-request tests.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
   },
 });

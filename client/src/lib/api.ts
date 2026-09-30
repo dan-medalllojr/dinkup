@@ -15,7 +15,8 @@ const REQUEST_TIMEOUT_MS = 15_000;
 
 // Always JSON, always same-origin cookies. The server rejects non-JSON
 // writes, so the Content-Type header is sent even when there's no body.
-export async function api<T>(method: Method, path: string, body?: unknown): Promise<T> {
+export async function api<T>(method: Method, path: string, body?: unknown, opts: { signal?: AbortSignal } = {}): Promise<T> {
+  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
@@ -24,9 +25,11 @@ export async function api<T>(method: Method, path: string, body?: unknown): Prom
       headers: { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
       // Without a timeout a stuck server leaves the UI on "Loading…" forever.
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: opts.signal ? AbortSignal.any([opts.signal, timeout]) : timeout,
     });
   } catch (err) {
+    // The caller cancelled (e.g. filters changed): let them ignore it.
+    if (opts.signal?.aborted) throw err;
     if (err instanceof DOMException && err.name === 'TimeoutError') {
       throw new ApiError(0, 'Dinkup is taking too long to respond. Try again in a moment.');
     }

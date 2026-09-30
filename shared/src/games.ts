@@ -71,3 +71,28 @@ export type Game = {
   players: (PlayerSummary & { joinedAt: string })[];
   createdAt: string;
 };
+
+/** Can a player of `level` join a game with this minimum? No minimum means anyone. */
+export function meetsMinLevel(level: SkillLevel, min: SkillLevel | null): boolean {
+  return min === null || SKILL_LEVELS.indexOf(level) >= SKILL_LEVELS.indexOf(min);
+}
+
+export type GameListItem = Game & { distanceKm: number | null };
+
+// Query-string filters for GET /api/games. Everything arrives as a string.
+export const listGamesQuerySchema = z.object({
+  date: z.iso.date().optional(),
+  level: z.enum(SKILL_LEVELS).optional(),
+  format: z.enum(GAME_FORMATS).optional(),
+  near: z
+    .string()
+    .regex(/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/, 'near must be "lat,lng"')
+    .transform((s) => {
+      const [lat, lng] = s.split(',').map(Number) as [number, number];
+      return { lat, lng };
+    })
+    .refine((p) => Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180, 'near is out of range')
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+export type ListGamesQuery = z.input<typeof listGamesQuerySchema>;

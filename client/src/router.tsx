@@ -3,6 +3,7 @@ import { Layout } from './components/Layout.tsx';
 import { RequireAuth } from './components/RequireAuth.tsx';
 import { RouteError } from './components/RouteError.tsx';
 import { GamePage } from './pages/GamePage.tsx';
+import { GamesPage } from './pages/GamesPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { LoginPage } from './pages/LoginPage.tsx';
 import { NotFoundPage } from './pages/NotFoundPage.tsx';
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
         // Leaflet is ~150 KB, so only load it when someone opens the map.
         lazy: async () => ({ Component: (await import('./pages/CourtsPage.tsx')).CourtsPage }),
       },
+      { path: 'games', element: <GamesPage /> },
       { path: 'games/:id', element: <GamePage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },

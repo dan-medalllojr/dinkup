@@ -12,3 +12,16 @@ export function todayInManila(now: Date = new Date()): string {
   // en-CA formats dates as YYYY-MM-DD.
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(now);
 }
+
+/** The UTC instants bounding a Manila calendar day: [start, end). */
+export function manilaDayRange(date: string): { start: Date; end: Date } {
+  const start = new Date(`${date}T00:00:00${MANILA_OFFSET}`);
+  return { start, end: new Date(start.getTime() + 24 * 60 * 60 * 1000) };
+}
+
+/** YYYY-MM-DD for the Manila date `days` after `date`. */
+export function addDaysToDate(date: string, days: number): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}

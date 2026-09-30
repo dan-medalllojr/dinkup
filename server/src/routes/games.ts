@@ -1,13 +1,25 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { createGameSchema, GAME_CAPACITY, MAX_UPCOMING_HOSTED_GAMES } from '@dinkup/shared';
+import {
+  createGameSchema,
+  distanceKm,
+  GAME_CAPACITY,
+  listGamesQuerySchema,
+  manilaDayRange,
+  MAX_UPCOMING_HOSTED_GAMES,
+  SKILL_LEVELS,
+  type GameListItem,
+} from '@dinkup/shared';
 import { prisma } from '../db.ts';
+import type { Prisma } from '../generated/prisma/client.ts';
 import { findScheduleClash, gameInclude, lockUser, toGame } from '../lib/games.ts';
 import { HttpError } from '../lib/http-error.ts';
 import { toDbLevel } from '../lib/users.ts';
 import { requireAuth } from '../middleware/auth.ts';
 
 export const gamesRouter = Router();
+
+const MAX_GAMES_FOR_DISTANCE_SORT = 500;
 
 const TIME_FORMAT = new Intl.DateTimeFormat('en-PH', {
   timeZone: 'Asia/Manila',
@@ -56,6 +68,48 @@ gamesRouter.post('/', requireAuth, async (req, res) => {
   });
 
   res.status(201).json({ game: toGame(game) });
+});
+
+// Public: guests browse games without an account. Only games that haven't
+// started yet are listed, since you can't join one in progress. Full games stay
+// in the list (with a "Full" badge) so the board doesn't look emptier than it is.
+gamesRouter.get('/', async (req, res) => {
+  const q = listGamesQuerySchema.parse(req.query);
+  const now = new Date();
+
+  const startsAt: Prisma.DateTimeFilter = { gt: now };
+  if (q.date) {
+    // "Today" means the Manila calendar day, not the server's or the phone's.
+    const { start, end } = manilaDayRange(q.date);
+    startsAt.gte = start;
+    startsAt.lt = end;
+  }
+
+  const where: Prisma.GameWhereInput = { status: 'open', startsAt };
+  if (q.format) where.format = q.format;
+  if (q.level) {
+    // Games this level can join: no minimum, or a minimum at or below it.
+    const allowed = SKILL_LEVELS.slice(0, SKILL_LEVELS.indexOf(q.level) + 1).map(toDbLevel);
+    where.OR = [{ minSkillLevel: null }, { minSkillLevel: { in: allowed } }];
+  }
+
+  // Distance isn't a column, so sorting by it happens here. Taking `limit` rows
+  // first would give the soonest N, not the nearest N; fetch a bounded larger
+  // set instead (upcoming games in Metro Cebu are well under this).
+  const rows = await prisma.game.findMany({
+    where,
+    include: gameInclude,
+    orderBy: { startsAt: 'asc' },
+    take: q.near ? MAX_GAMES_FOR_DISTANCE_SORT : q.limit,
+  });
+  const games: GameListItem[] = rows.map((g) => ({
+    ...toGame(g, now),
+    distanceKm: q.near ? distanceKm(q.near, g.court) : null,
+  }));
+  // Nearest first when we know where the player is; soonest breaks ties.
+  if (q.near) games.sort((a, b) => a.distanceKm! - b.distanceKm! || a.startsAt.localeCompare(b.startsAt));
+
+  res.json({ games: games.slice(0, q.limit) });
 });
 
 // Public so a shared game link works for guests.

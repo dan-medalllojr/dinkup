@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import {
+  addDaysToDate,
   createGameSchema,
   DEFAULT_DURATION_MIN,
   DURATION_OPTIONS,
@@ -20,12 +21,6 @@ import { api, ApiError } from '../lib/api.ts';
 import { errorsFromApi, validate, type FieldErrors } from '../lib/forms.ts';
 import { levelOptions } from '../lib/labels.ts';
 import { formatDuration } from '../lib/time.ts';
-
-function addDays(isoDate: string, days: number) {
-  const d = new Date(`${isoDate}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
 
 export function NewGamePage() {
   const navigate = useNavigate();
@@ -114,7 +109,7 @@ export function NewGamePage() {
               label="Date"
               type="date"
               min={today}
-              max={addDays(today, MAX_DAYS_AHEAD - 1)}
+              max={addDaysToDate(today, MAX_DAYS_AHEAD - 1)}
               value={values.date}
               onChange={(e) => set('date', e.target.value)}
             />
