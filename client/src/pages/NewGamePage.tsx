@@ -14,10 +14,16 @@ import {
   type GameFormat,
   type SkillLevel,
 } from '@dinkup/shared';
+import { AddCourtPanel } from '../components/AddCourtPanel.tsx';
+import { CourtGames } from '../components/CourtGames.tsx';
 import { CourtMap } from '../components/CourtMap.tsx';
 import { SelectField, TextField } from '../components/Field.tsx';
 import { Segmented } from '../components/Segmented.tsx';
 import { api, ApiError } from '../lib/api.ts';
+import { useAuth } from '../lib/auth.tsx';
+import { useAddCourt } from '../lib/useAddCourt.ts';
+import { useGames } from '../lib/useGames.ts';
+import { useGeolocation } from '../lib/useGeolocation.ts';
 import { errorsFromApi, validate, type FieldErrors } from '../lib/forms.ts';
 import { levelOptions } from '../lib/labels.ts';
 import { formatDuration } from '../lib/time.ts';
@@ -51,6 +57,14 @@ export function NewGamePage() {
   }, []);
 
   const court = courts?.find((c) => c.id === values.courtId) ?? null;
+  const { user } = useAuth();
+  const geo = useGeolocation();
+  const add = useAddCourt(courts ?? [], (created) => {
+    setCourts((c) => [...(c ?? []), created].sort((a, b) => a.name.localeCompare(b.name)));
+    set('courtId', created.id);
+  });
+  // What's already booked at the chosen court, so hosts can avoid a clash.
+  const courtGames = useGames(values.courtId ? `court=${values.courtId}&limit=5` : '', { skip: !values.courtId });
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -87,19 +101,57 @@ export function NewGamePage() {
       <form onSubmit={onSubmit} noValidate className="stack">
         <section className="card">
           <h2>Where</h2>
-          <p className="muted small">Tap a pin or choose from the list.</p>
-          <CourtMap courts={courts ?? []} selectedId={values.courtId || null} onSelect={(id) => set('courtId', id)} userLocation={null} />
-          <SelectField
-            label="Court"
-            value={values.courtId}
-            onChange={(e) => set('courtId', e.target.value)}
-            options={[
-              { value: '', label: courts ? 'Choose a court…' : 'Loading courts…' },
-              ...(courts ?? []).map((c) => ({ value: c.id, label: `${c.name} (${c.city})` })),
-            ]}
-            error={errors.courtId}
+          <p className="muted small">
+            {add.active ? 'Add the court you play at. It will be on the map for everyone.' : 'Tap a pin, search, or choose from the list.'}
+          </p>
+          <CourtMap
+            courts={courts ?? []}
+            selectedId={add.active ? null : values.courtId || null}
+            onSelect={(id) => id && set('courtId', id)}
+            userLocation={geo.location}
+            onLocate={geo.locate}
+            locating={geo.locating}
+            search
+            onPlacePicked={add.active ? add.pickPlace : undefined}
+            draftPin={add.active ? add.pin : undefined}
+            onDraftMove={add.setPin}
           />
-          {court ? <p className="muted small">{[court.address, court.city].filter(Boolean).join(', ')}</p> : null}
+          {add.active ? (
+            <AddCourtPanel
+              add={add}
+              onUseExisting={(existing) => {
+                add.cancel();
+                set('courtId', existing.id);
+              }}
+            />
+          ) : (
+            <>
+              <SelectField
+                label="Court"
+                value={values.courtId}
+                onChange={(e) => set('courtId', e.target.value)}
+                options={[
+                  { value: '', label: courts ? 'Choose a court…' : 'Loading courts…' },
+                  ...(courts ?? []).map((c) => ({ value: c.id, label: `${c.name} (${c.city})${c.addedBy ? ' · added by a player' : ''}` })),
+                ]}
+                error={errors.courtId}
+              />
+              {court ? (
+                <div className="chosen-court">
+                  <p className="muted small">{[court.address, court.city].filter(Boolean).join(', ')}</p>
+                  <h3 className="sheet-subtitle">Already booked here</h3>
+                  <CourtGames games={courtGames.games} empty="No other games here yet." />
+                </div>
+              ) : null}
+              {user && !user.isDemo ? (
+                <button type="button" className="link-button small" onClick={add.start}>
+                  Can't find your court? Add it
+                </button>
+              ) : user?.isDemo ? (
+                <p className="muted small">Demo accounts can only use listed courts. Sign up to add your own.</p>
+              ) : null}
+            </>
+          )}
         </section>
 
         <section className="card">

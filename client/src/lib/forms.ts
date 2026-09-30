@@ -15,6 +15,6 @@ export function errorsFromApi(err: unknown): { form: string; fields: FieldErrors
   return { form: 'Something went wrong', fields: {} };
 }
 
-function firstErrors(fields: Record<string, string[] | undefined>): FieldErrors {
+export function firstErrors(fields: Record<string, string[] | undefined>): FieldErrors {
   return Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v?.[0]]));
 }

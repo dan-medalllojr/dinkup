@@ -5,13 +5,14 @@ import { useReconnect } from './useReconnect.ts';
 
 // Fetches /api/games for a query string. Aborts the previous request when the
 // query changes, so a slow old response can't overwrite a newer one.
-export function useGames(query: string) {
+export function useGames(query: string, opts: { skip?: boolean } = {}) {
   const [games, setGames] = useState<GameListItem[] | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const reconnect = useReconnect();
 
   useEffect(() => {
+    if (opts.skip) return;
     const controller = new AbortController();
     setLoading(true);
     setError('');
@@ -25,7 +26,7 @@ export function useGames(query: string) {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [query, reconnect]);
+  }, [query, reconnect, opts.skip]);
 
   return { games, error, loading };
 }

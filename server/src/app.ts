@@ -6,6 +6,7 @@ import { authRouter } from './routes/auth.ts';
 import { commentsRouter } from './routes/comments.ts';
 import { courtsRouter } from './routes/courts.ts';
 import { gamesRouter } from './routes/games.ts';
+import { geoRouter } from './routes/geo.ts';
 import { usersRouter } from './routes/users.ts';
 import { sessionMiddleware } from './session.ts';
 
@@ -28,6 +29,7 @@ export function createApp() {
   api.use('/courts', courtsRouter);
   api.use('/games/:id/comments', commentsRouter);
   api.use('/games', gamesRouter);
+  api.use('/geo', geoRouter);
   api.use(notFound);
   app.use('/api', api);
 

@@ -41,6 +41,7 @@ model User {
   hostedGames Game[]        @relation("HostedGames")
   gamesJoined GamePlayer[]
   comments    GameComment[]
+  courtsAdded Court[]       @relation("AddedCourts")
 
   @@map("users")
 }
@@ -78,10 +79,15 @@ model Court {
   notes      String?       @db.VarChar(300)
   // Where the pin came from, so bad data can be traced and fixed.
   source     String        @db.VarChar(200)
+  // Set when a player added this court from the app; null for curated courts.
+  addedById  String?       @map("added_by_id") @db.Uuid
   createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  games Game[]
+  // SetNull: if the player deletes their account, the court stays.
+  addedBy User?  @relation("AddedCourts", fields: [addedById], references: [id], onDelete: SetNull)
+  games   Game[]
 
+  @@index([addedById])
   @@map("courts")
 }
 

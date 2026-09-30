@@ -55,4 +55,8 @@ export type Court = {
   courtCount: number | null;
   setting: 'indoor' | 'outdoor' | 'covered' | null;
   notes: string | null;
+  // Null for curated courts; set when a player added it from the app.
+  addedBy: { id: string; name: string } | null;
+  // Open games that haven't started yet, for map badges.
+  upcomingGames: number;
 };

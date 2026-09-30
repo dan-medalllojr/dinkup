@@ -88,6 +88,7 @@ gamesRouter.get('/', async (req, res) => {
 
   const where: Prisma.GameWhereInput = { status: 'open', startsAt };
   if (q.format) where.format = q.format;
+  if (q.court) where.courtId = q.court;
   if (q.level) {
     // Games this level can join: no minimum, or a minimum at or below it.
     const allowed = SKILL_LEVELS.slice(0, SKILL_LEVELS.indexOf(q.level) + 1).map(toDbLevel);

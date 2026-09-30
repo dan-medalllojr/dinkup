@@ -1,7 +1,8 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { addDaysToDate, GAME_FORMATS, SKILL_LEVELS, todayInManila, type Court, type GameFormat, type SkillLevel } from '@dinkup/shared';
+import { addDaysToDate, distanceKm, GAME_FORMATS, SKILL_LEVELS, todayInManila, type Court, type GameFormat, type SkillLevel } from '@dinkup/shared';
 import { SelectField } from '../components/Field.tsx';
+import { CourtSheet, SHEET_OFFSET } from '../components/CourtSheet.tsx';
 import { GameCard } from '../components/GameCard.tsx';
 import { useAuth } from '../lib/auth.tsx';
 import { levelOptions } from '../lib/labels.ts';
@@ -52,16 +53,19 @@ export function GamesPage() {
 
   const { games, error, loading } = useGames(query);
 
-  // One pin per court that has games, for the map view.
-  const courts = useMemo(() => {
+  // One pin per court that has games matching the filters; the badge counts them.
+  const { courts, countByCourt } = useMemo(() => {
     const byId = new Map<string, Court>();
+    const counts = new Map<string, number>();
     for (const g of games ?? []) {
-      byId.set(g.court.id, { ...g.court, courtCount: null, setting: null, notes: null });
+      byId.set(g.court.id, { ...g.court, courtCount: null, setting: null, notes: null, addedBy: null, upcomingGames: 0 });
+      counts.set(g.court.id, (counts.get(g.court.id) ?? 0) + 1);
     }
-    return [...byId.values()];
+    return { courts: [...byId.values()], countByCourt: counts };
   }, [games]);
 
-  const visible = view === 'map' && selectedCourtId ? (games ?? []).filter((g) => g.court.id === selectedCourtId) : (games ?? []);
+  const visible = games ?? [];
+  const selectedCourt = view === 'map' ? (courts.find((c) => c.id === selectedCourtId) ?? null) : null;
   const filtered = Boolean(date || level || format);
   const customDate = date && date !== today && date !== tomorrow;
 
@@ -127,11 +131,23 @@ export function GamesPage() {
 
       {view === 'map' ? (
         <Suspense fallback={<div className="map map-placeholder">Loading map…</div>}>
-          <CourtMap courts={courts} selectedId={selectedCourtId} onSelect={setSelectedCourtId} userLocation={geo.location} />
-          {selectedCourtId ? (
-            <button className="link-button small" onClick={() => setSelectedCourtId(null)}>
-              Show games at all courts
-            </button>
+          <CourtMap
+            courts={courts}
+            selectedId={selectedCourtId}
+            onSelect={setSelectedCourtId}
+            userLocation={geo.location}
+            onLocate={geo.locate}
+            locating={geo.locating}
+            countFor={(c) => countByCourt.get(c.id) ?? 0}
+            sheetOffset={selectedCourt ? SHEET_OFFSET : 0}
+          />
+          {selectedCourt ? (
+            <CourtSheet
+              court={selectedCourt}
+              onClose={() => setSelectedCourtId(null)}
+              distanceKm={geo.location ? distanceKm(geo.location, selectedCourt) : null}
+              games={visible.filter((g) => g.court.id === selectedCourt.id)}
+            />
           ) : null}
         </Suspense>
       ) : null}

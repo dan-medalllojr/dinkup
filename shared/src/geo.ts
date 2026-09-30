@@ -18,3 +18,19 @@ export function distanceKm(a: LatLng, b: LatLng): number {
 export function directionsUrl({ lat, lng }: LatLng): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 }
+
+// Where courts can be added: Cebu island plus Mactan, Bantayan, and Camotes.
+export const CEBU_BOUNDS = { south: 9.3, west: 123.2, north: 11.4, east: 124.5 } as const;
+
+export function inCebu({ lat, lng }: LatLng): boolean {
+  return lat >= CEBU_BOUNDS.south && lat <= CEBU_BOUNDS.north && lng >= CEBU_BOUNDS.west && lng <= CEBU_BOUNDS.east;
+}
+
+// Closer than this to an existing court is treated as the same place.
+export const DUPLICATE_COURT_METERS = 50;
+// Closer than this, the app asks "is this the same place?" before adding.
+export const NEARBY_COURT_METERS = 150;
+export const MAX_COURTS_ADDED_PER_DAY = 5;
+
+/** A search or reverse-geocoding result (via the server's Nominatim proxy). */
+export type Place = { label: string; address: string; city: string; lat: number; lng: number };

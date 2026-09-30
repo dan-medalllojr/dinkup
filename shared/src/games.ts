@@ -87,6 +87,7 @@ export const listGamesQuerySchema = z.object({
   date: z.iso.date().optional(),
   level: z.enum(SKILL_LEVELS).optional(),
   format: z.enum(GAME_FORMATS).optional(),
+  court: z.uuid().optional(),
   near: z
     .string()
     .regex(/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/, 'near must be "lat,lng"')
