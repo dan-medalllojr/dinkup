@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Stored as "3.0" … "5.0" in the database; ordered lowest → highest.
+enum SkillLevel {
+  L3_0 @map("3.0")
+  L3_5 @map("3.5")
+  L4_0 @map("4.0")
+  L4_5 @map("4.5")
+  L5_0 @map("5.0")
+
+  @@map("skill_level")
+}
+
+enum PreferredFormat {
+  singles
+  doubles
+  either
+
+  @@map("preferred_format")
+}
+
+model User {
+  id              String          @id @default(uuid()) @db.Uuid
+  name            String          @db.VarChar(60)
+  email           String          @unique @db.VarChar(254)
+  passwordHash    String          @map("password_hash")
+  photoUrl        String?         @map("photo_url")
+  skillLevel      SkillLevel      @default(L3_0) @map("skill_level")
+  preferredFormat PreferredFormat @default(either) @map("preferred_format")
+  skillPoints     Int             @default(0) @map("skill_points")
+  isDemo          Boolean         @default(false) @map("is_demo")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("users")
+}
+
+// Owned by connect-pg-simple. Defined here so Prisma migrations create it
+// and `migrate dev` doesn't flag it as drift.
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
+}

@@ -1,0 +1,32 @@
+import { Link } from 'react-router';
+import { useAuth } from '../lib/auth.tsx';
+
+export function HomePage() {
+  const { user } = useAuth();
+
+  return (
+    <>
+      <section className="hero">
+        <h1>Find a pickleball game in Cebu.</h1>
+        <p>Post a game at your court, fill the open slots, and level up with every confirmed win.</p>
+        {user ? (
+          <p className="hero-greeting">Welcome back, {user.name.split(' ')[0]}.</p>
+        ) : (
+          <div className="hero-actions">
+            <Link to="/register" className="button">
+              Get started
+            </Link>
+            <Link to="/login" className="button button-ghost">
+              Log in
+            </Link>
+          </div>
+        )}
+      </section>
+
+      <section className="card">
+        <h2>Upcoming games</h2>
+        <p className="muted">Games near you will show up here once courts and game posting are live.</p>
+      </section>
+    </>
+  );
+}
