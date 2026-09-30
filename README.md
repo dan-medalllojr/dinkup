@@ -28,6 +28,14 @@ npm run db:seed --workspace server    # real Cebu courts
 npm run dev                           # API on :3000, app on http://localhost:5173
 ```
 
+### Using Neon instead of local Postgres
+
+1. Create a Neon project (Singapore region is closest to Cebu).
+2. In `server/.env`, set `DATABASE_URL` to the **pooled** connection string (host contains `-pooler`) and `DIRECT_URL` to the **direct** one.
+3. `npm run db:deploy --workspace server && npm run db:seed --workspace server`
+
+The app connects through the pooler; Prisma's CLI (migrations, Studio) uses `DIRECT_URL`. Tests always use the local `dinkup_test` database and refuse to run against any database whose name doesn't end in `_test`.
+
 The Vite dev server proxies `/api` to Express, so the app and API share one origin in development and production.
 
 ## Scripts
@@ -35,6 +43,7 @@ The Vite dev server proxies `/api` to Express, so the app and API share one orig
 | Command | What it does |
 |---|---|
 | `npm run dev` | API (tsx watch) + client (Vite) |
+| `npm run db:deploy --workspace server` | Apply migrations without prompts (Neon / production) |
 | `npm run db:seed --workspace server` | Upsert courts from `server/prisma/data/courts.ts` (safe to re-run) |
 | `npm test` | API tests (Vitest + Supertest) against `dinkup_test` |
 | `npm run typecheck` | Typecheck all workspaces |
