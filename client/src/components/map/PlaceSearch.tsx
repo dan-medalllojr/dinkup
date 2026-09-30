@@ -137,7 +137,7 @@ export function PlaceSearch({ onPick }: { onPick: (place: PickedPlace) => void }
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onKeyDown}
           onFocus={() => suggestions.length && setOpen(true)}
-          placeholder="Search a place, or paste a Google Maps link"
+          placeholder="Search or paste a Maps link"
           aria-label="Search a place, or paste a Google Maps link or coordinates"
           enterKeyHint="search"
           autoComplete="off"
