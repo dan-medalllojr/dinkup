@@ -11,6 +11,8 @@ export class ApiError extends Error {
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
 // Always JSON, always same-origin cookies. The server rejects non-JSON
 // writes, so the Content-Type header is sent even when there's no body.
 export async function api<T>(method: Method, path: string, body?: unknown): Promise<T> {
@@ -21,8 +23,13 @@ export async function api<T>(method: Method, path: string, body?: unknown): Prom
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
+      // Without a timeout a stuck server leaves the UI on "Loading…" forever.
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'TimeoutError') {
+      throw new ApiError(0, 'Dinkup is taking too long to respond. Try again in a moment.');
+    }
     throw new ApiError(0, "Can't reach Dinkup. Check your connection.");
   }
 

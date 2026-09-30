@@ -24,6 +24,7 @@ npm install
 cp server/.env.example server/.env   # then set SESSION_SECRET
 npm run db:up                         # Postgres on :5432 (creates dinkup + dinkup_test)
 npm run db:migrate --workspace server
+npm run db:seed --workspace server    # real Cebu courts
 npm run dev                           # API on :3000, app on http://localhost:5173
 ```
 
@@ -34,6 +35,7 @@ The Vite dev server proxies `/api` to Express, so the app and API share one orig
 | Command | What it does |
 |---|---|
 | `npm run dev` | API (tsx watch) + client (Vite) |
+| `npm run db:seed --workspace server` | Upsert courts from `server/prisma/data/courts.ts` (safe to re-run) |
 | `npm test` | API tests (Vitest + Supertest) against `dinkup_test` |
 | `npm run typecheck` | Typecheck all workspaces |
 | `npm run build` | Build client, then bundle server |

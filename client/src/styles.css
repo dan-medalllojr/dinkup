@@ -113,7 +113,7 @@ a { color: var(--green); }
 }
 .button:hover { background: var(--green-dark); }
 .button:disabled { opacity: 0.6; cursor: progress; }
-.button-small { min-height: 36px; padding: 0 0.9rem; font-size: 0.9rem; color: #fff !important; }
+.button-small { min-height: 36px; padding: 0 0.9rem; font-size: 0.9rem; }
 .button-block { width: 100%; }
 .button-ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .button-ghost:hover { background: var(--border); }
@@ -154,3 +154,59 @@ form { display: flex; flex-direction: column; gap: 0.9rem; margin: 1rem 0; }
 .points { display: flex; flex-direction: column; gap: 0.25rem; }
 .points-bar { width: 180px; max-width: 100%; height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
 .points-bar span { display: block; height: 100%; background: var(--lime); }
+
+.topnav a.active:not(.button) { color: var(--green); }
+
+.page-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.page-header h1 { margin: 0; }
+
+.card-link { display: block; color: inherit; text-decoration: none; }
+.card-link:hover { border-color: var(--green); }
+
+.map {
+  height: min(55vh, 420px);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  z-index: 0; /* keep Leaflet panes under the sticky header */
+}
+.map-pin {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--green);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
+.map-pin-active { background: var(--lime); border-color: #1c2420; }
+.map-user {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2b6cb0;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 6px rgb(43 108 176 / 0.25);
+}
+
+.court-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.court-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 1rem; }
+.court-item-active { border-color: var(--green); outline: 1px solid var(--green); }
+.court-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.court-name { font-weight: 700; }
+.court-item-side { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; flex-shrink: 0; }
+.distance { font-weight: 700; font-variant-numeric: tabular-nums; }

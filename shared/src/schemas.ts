@@ -42,3 +42,15 @@ export type PublicUser = {
 };
 
 export type Me = PublicUser & { email: string };
+
+export type Court = {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  courtCount: number | null;
+  setting: 'indoor' | 'outdoor' | 'covered' | null;
+  notes: string | null;
+};

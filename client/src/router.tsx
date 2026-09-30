@@ -11,8 +11,15 @@ import { RegisterPage } from './pages/RegisterPage.tsx';
 export const router = createBrowserRouter([
   {
     element: <Layout />,
+    // Shown while a lazy route (e.g. /courts) loads on a direct visit.
+    hydrateFallbackElement: <p className="page muted">Loading…</p>,
     children: [
       { index: true, element: <HomePage /> },
+      {
+        path: 'courts',
+        // Leaflet is ~150 KB, so only load it when someone opens the map.
+        lazy: async () => ({ Component: (await import('./pages/CourtsPage.tsx')).CourtsPage }),
+      },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'players/:id', element: <PlayerPage /> },

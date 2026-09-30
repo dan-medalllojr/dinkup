@@ -13,6 +13,7 @@ export function Layout() {
           Dinkup
         </Link>
         <nav className="topnav">
+          <NavLink to="/courts">Courts</NavLink>
           {loading ? null : user ? (
             <NavLink to="/profile" className="topnav-profile" aria-label="Your profile">
               <Avatar name={user.name} photoUrl={user.photoUrl} size={32} />

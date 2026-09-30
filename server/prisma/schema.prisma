@@ -51,3 +51,30 @@ model Session {
   @@index([expire], map: "IDX_session_expire")
   @@map("session")
 }
+
+enum CourtSetting {
+  indoor
+  outdoor
+  covered
+
+  @@map("court_setting")
+}
+
+model Court {
+  id         String        @id @default(uuid()) @db.Uuid
+  // Stable key so the seed can upsert without creating duplicates.
+  slug       String        @unique @db.VarChar(80)
+  name       String        @db.VarChar(100)
+  address    String        @db.VarChar(200)
+  city       String        @db.VarChar(60)
+  lat        Float
+  lng        Float
+  courtCount Int?          @map("court_count")
+  setting    CourtSetting?
+  notes      String?       @db.VarChar(300)
+  // Where the pin came from, so bad data can be traced and fixed.
+  source     String        @db.VarChar(200)
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("courts")
+}

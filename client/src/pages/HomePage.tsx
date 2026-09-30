@@ -25,8 +25,13 @@ export function HomePage() {
 
       <section className="card">
         <h2>Upcoming games</h2>
-        <p className="muted">Games near you will show up here once courts and game posting are live.</p>
+        <p className="muted">Games near you will show up here once game posting is live.</p>
       </section>
+
+      <Link to="/courts" className="card card-link">
+        <h2>Find a court</h2>
+        <p className="muted">Pickleball courts around Metro Cebu, on a map, with directions.</p>
+      </Link>
     </>
   );
 }

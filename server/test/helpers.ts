@@ -7,7 +7,7 @@ export const app = createApp();
 
 export function useCleanDatabase() {
   beforeEach(async () => {
-    await prisma.$executeRawUnsafe('TRUNCATE users, session CASCADE');
+    await prisma.$executeRawUnsafe('TRUNCATE users, session, courts CASCADE');
   });
   afterAll(async () => {
     await prisma.$disconnect();
