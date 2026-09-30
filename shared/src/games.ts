@@ -55,6 +55,7 @@ export type PlayerSummary = {
   name: string;
   photoUrl: string | null;
   skillLevel: SkillLevel;
+  isDemo: boolean;
 };
 
 export type Game = {
@@ -68,6 +69,8 @@ export type Game = {
   capacity: number;
   minSkillLevel: SkillLevel | null;
   status: GameDisplayStatus;
+  // Hosted by the demo cast: no one will actually be at the court.
+  isDemo: boolean;
   players: (PlayerSummary & { joinedAt: string })[];
   createdAt: string;
 };

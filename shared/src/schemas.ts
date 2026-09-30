@@ -38,6 +38,8 @@ export type PublicUser = {
   skillLevel: (typeof SKILL_LEVELS)[number];
   preferredFormat: (typeof FORMATS)[number];
   skillPoints: number;
+  // Demo cast and "Try the demo" visitors; shown with a Demo label.
+  isDemo: boolean;
   createdAt: string;
 };
 

@@ -31,7 +31,9 @@ export function PlayerPage() {
     <section className="card profile-summary">
       <Avatar name={player.name} photoUrl={player.photoUrl} size={72} />
       <div>
-        <h1>{player.name}</h1>
+        <h1>
+          {player.name} {player.isDemo ? <span className="badge badge-demo">Demo</span> : null}
+        </h1>
         <p className="muted">
           {levelLabel(player.skillLevel)} · {FORMAT_LABELS[player.preferredFormat]}
         </p>

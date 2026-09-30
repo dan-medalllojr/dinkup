@@ -5,6 +5,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
   DATABASE_URL: z.url(),
   SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must be at least 32 characters'),
+  // Keeps a rolling week of labeled demo games and enables "Try the demo".
+  DEMO_MODE: z.enum(['true', 'false']).default('true').transform((v) => v === 'true'),
 });
 
 // Fail fast on boot instead of at the first request that needs a missing value.

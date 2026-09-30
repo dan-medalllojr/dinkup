@@ -1,4 +1,6 @@
 import { pool, prisma } from '../src/db.ts';
+import { env } from '../src/env.ts';
+import { ensureDemoData } from '../src/lib/demo.ts';
 import { COURTS } from './data/courts.ts';
 
 async function seedCourts() {
@@ -16,6 +18,10 @@ async function seedCourts() {
 
 try {
   await seedCourts();
+  if (env.DEMO_MODE) {
+    const r = await ensureDemoData();
+    console.log(`Demo: ${r.created} games created, ${r.removedGames} old games and ${r.removedVisitors} expired visitors removed`);
+  }
 } finally {
   await prisma.$disconnect();
   await pool.end();

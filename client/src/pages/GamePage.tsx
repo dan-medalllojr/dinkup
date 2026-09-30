@@ -69,9 +69,15 @@ export function GamePage() {
 
   return (
     <>
+      {game.isDemo ? (
+        <p className="notice notice-demo" role="note">
+          <strong>Demo game.</strong> This shows how Dinkup works. It's not a real meetup, so no one will be at the court.
+        </p>
+      ) : null}
       <section className="card game-hero">
         <div className="game-tags">
           <span className={`badge badge-${game.status}`}>{STATUS_LABELS[game.status]}</span>
+          {game.isDemo ? <span className="badge badge-demo">Demo</span> : null}
           <span className="badge">{game.format === 'singles' ? 'Singles' : 'Doubles'}</span>
           <span className="badge">
             {game.minSkillLevel ? `${game.minSkillLevel}+ ${SKILL_LABELS[game.minSkillLevel]}` : 'Any level'}

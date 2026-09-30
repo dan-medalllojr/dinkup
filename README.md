@@ -49,6 +49,10 @@ The Vite dev server proxies `/api` to Express, so the app and API share one orig
 | `npm run build` | Build client, then bundle server |
 | `npm start` | Run the production server (serves the built client) |
 
+## Demo mode
+
+With `DEMO_MODE=true` (the default), the server keeps a rolling week of demo games hosted by a fake cast. It fills them in on startup and every hour, and clears out old ones. **Try the demo** on the home and login pages logs a visitor into a fresh throwaway account, deleted after 24 hours. Demo games and players are always labeled "Demo" so real players never travel to a court for a game that doesn't exist. Set `DEMO_MODE=false` to turn all of this off.
+
 ## Security notes
 
 - Sessions are stored in Postgres (`connect-pg-simple`), in an `httpOnly`, `SameSite=Lax` cookie that's `Secure` in production. The session ID is regenerated on login to prevent session fixation.

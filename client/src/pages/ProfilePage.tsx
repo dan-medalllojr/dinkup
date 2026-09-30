@@ -59,6 +59,12 @@ export function ProfilePage() {
 
   return (
     <>
+      {me.isDemo ? (
+        <p className="notice notice-demo" role="note">
+          <strong>You're using a demo account.</strong> It's deleted after 24 hours. <Link to="/register">Sign up</Link> to keep a
+          real profile.
+        </p>
+      ) : null}
       <section className="card profile-summary">
         <Avatar name={me.name} photoUrl={me.photoUrl} size={72} />
         <div>

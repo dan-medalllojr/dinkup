@@ -12,7 +12,7 @@ export const gameInclude = {
 type GameWithRelations = Prisma.GameGetPayload<{ include: typeof gameInclude }>;
 
 function toPlayerSummary(u: User): PlayerSummary {
-  return { id: u.id, name: u.name, photoUrl: u.photoUrl, skillLevel: fromDbLevel(u.skillLevel) };
+  return { id: u.id, name: u.name, photoUrl: u.photoUrl, skillLevel: fromDbLevel(u.skillLevel), isDemo: u.isDemo };
 }
 
 export function toGame(g: GameWithRelations, now = new Date()): Game {
@@ -27,6 +27,7 @@ export function toGame(g: GameWithRelations, now = new Date()): Game {
     capacity: g.capacity,
     minSkillLevel: g.minSkillLevel && fromDbLevel(g.minSkillLevel),
     status: gameDisplayStatus({ ...g, playerCount: g.players.length }, now),
+    isDemo: g.host.isDemo,
     players: g.players.map((p) => ({ ...toPlayerSummary(p.user), joinedAt: p.joinedAt.toISOString() })),
     createdAt: g.createdAt.toISOString(),
   };

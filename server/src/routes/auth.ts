@@ -5,6 +5,7 @@ import { loginSchema, registerSchema } from '@dinkup/shared';
 import { prisma } from '../db.ts';
 import { env } from '../env.ts';
 import { Prisma } from '../generated/prisma/client.ts';
+import { createDemoVisitor } from '../lib/demo.ts';
 import { HttpError } from '../lib/http-error.ts';
 import { toDbLevel, toMe } from '../lib/users.ts';
 import { SESSION_COOKIE, sessionCookieOptions } from '../session.ts';
@@ -21,6 +22,16 @@ const authLimiter = rateLimit({
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: { error: 'Too many attempts. Try again in a few minutes.' },
+  skip: () => env.NODE_ENV === 'test',
+});
+
+// Each click makes a throwaway account, so cap how many one IP can create.
+const demoLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: "You've started a lot of demos. Try again in an hour, or sign up." },
   skip: () => env.NODE_ENV === 'test',
 });
 
@@ -72,6 +83,16 @@ authRouter.post('/login', authLimiter, async (req, res) => {
 
   await startSession(req, user.id);
   res.json({ user: toMe(user) });
+});
+
+// "Try the demo": log straight into a fresh demo account, no signup needed.
+// A fresh account per visitor (instead of one shared login) means one
+// person's changes never leak into the next person's demo.
+authRouter.post('/demo', demoLimiter, async (req, res) => {
+  if (!env.DEMO_MODE) throw new HttpError(404, 'Not found');
+  const visitor = await createDemoVisitor();
+  await startSession(req, visitor.id);
+  res.status(201).json({ user: toMe(visitor) });
 });
 
 authRouter.post('/logout', (req, res, next) => {

@@ -8,6 +8,7 @@ type AuthState = {
   login: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
+  tryDemo: () => Promise<void>;
   updateProfile: (input: UpdateProfileInput) => Promise<void>;
 };
 
@@ -34,6 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.user);
   }, []);
 
+  const tryDemo = useCallback(async () => {
+    const res = await api<{ user: Me }>('POST', '/auth/demo');
+    setUser(res.user);
+  }, []);
+
   const logout = useCallback(async () => {
     await api('POST', '/auth/logout');
     setUser(null);
@@ -45,8 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, updateProfile }),
-    [user, loading, login, register, logout, updateProfile],
+    () => ({ user, loading, login, register, logout, tryDemo, updateProfile }),
+    [user, loading, login, register, logout, tryDemo, updateProfile],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

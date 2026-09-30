@@ -115,7 +115,7 @@ Roughly one vibe-coding session per step. One commit (or PR) per step, with a ma
     Players below a game's minimum level **can't join** (decided 2026-09-30; may relax to a warning later).
     ✅ Done, plus a schedule-clash check for joiners and "Your upcoming games" on the profile.
 6. **Game page:** players list, directions link, comments. ✅ Done. Only players can post, the host moderates, a per-user rate limit applies, and the thread refreshes every 20 s.
-7. **Demo data:** demo users + rolling upcoming games, "Try the demo" button.
+7. **Demo data:** demo users + rolling upcoming games, "Try the demo" button. ✅ Done. Each "Try the demo" click gets its own 24-hour account, demo games are labeled so real players don't turn up for them, and the server tops up the week on startup and every hour.
 8. **PWA polish:** manifest, icons, install prompt, offline fallback page, mobile layout check.
 9. **Deploy:** go live and invite a few real players to try it.
 10. **Results + leveling:** result reporting, loser confirmation, skill points, level-ups, and anti-boosting guards (see below). Test every guard.

@@ -21,6 +21,7 @@ export function toPublicUser(user: User): PublicUser {
     skillLevel: fromDbLevel(user.skillLevel),
     preferredFormat: user.preferredFormat,
     skillPoints: user.skillPoints,
+    isDemo: user.isDemo,
     createdAt: user.createdAt.toISOString(),
   };
 }

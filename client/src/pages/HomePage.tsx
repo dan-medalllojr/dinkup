@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { DemoButton } from '../components/DemoButton.tsx';
 import { GameCard } from '../components/GameCard.tsx';
 import { useGames } from '../lib/useGames.ts';
 import { useAuth } from '../lib/auth.tsx';
@@ -26,9 +27,7 @@ export function HomePage() {
             <Link to="/register" className="button">
               Get started
             </Link>
-            <Link to="/login" className="button button-ghost">
-              Log in
-            </Link>
+            <DemoButton />
           </div>
         )}
       </section>

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { loginSchema } from '@dinkup/shared';
+import { DemoButton } from '../components/DemoButton.tsx';
 import { TextField } from '../components/Field.tsx';
 import { useAuth } from '../lib/auth.tsx';
 import { errorsFromApi, validate, type FieldErrors } from '../lib/forms.ts';
@@ -62,6 +63,10 @@ export function LoginPage() {
       <p className="muted center">
         New to Dinkup? <Link to="/register">Create an account</Link>
       </p>
+      <div className="demo-cta">
+        <span className="muted small">Just looking around?</span>
+        <DemoButton className="button button-ghost button-small" label="Try the demo, no signup" />
+      </div>
     </section>
   );
 }

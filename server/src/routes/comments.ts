@@ -28,7 +28,7 @@ function toComment(c: DbComment & { user: User }): GameComment {
     id: c.id,
     body: c.body,
     createdAt: c.createdAt.toISOString(),
-    author: { id: c.user.id, name: c.user.name, photoUrl: c.user.photoUrl, skillLevel: fromDbLevel(c.user.skillLevel) },
+    author: { id: c.user.id, name: c.user.name, photoUrl: c.user.photoUrl, skillLevel: fromDbLevel(c.user.skillLevel), isDemo: c.user.isDemo },
   };
 }
 

@@ -31,6 +31,7 @@ export function GameCard({ game }: { game: GameListItem | (Game & { distanceKm?:
           {game.court.name} <span className="muted">· {game.court.city}</span>
         </span>
         <span className="game-tags">
+          {game.isDemo ? <span className="badge badge-demo">Demo</span> : null}
           <span className="badge">{game.format === 'singles' ? 'Singles' : 'Doubles'}</span>
           <span className="badge">{game.minSkillLevel ? `${game.minSkillLevel}+` : 'Any level'}</span>
           {game.status === 'cancelled' ? (

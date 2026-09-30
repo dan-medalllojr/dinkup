@@ -411,3 +411,9 @@ fieldset.segmented legend { padding: 0; margin-bottom: 0.3rem; font-weight: 600;
 }
 .comment-form textarea:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 .comment-form-footer { display: flex; align-items: center; justify-content: space-between; }
+
+.badge-demo { border-style: dashed; border-color: var(--muted); color: var(--muted); }
+.notice-demo { border-style: dashed; color: var(--text); }
+.demo-cta { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+.hero-actions .form-error { flex-basis: 100%; }
+.hero-actions { flex-wrap: wrap; }
