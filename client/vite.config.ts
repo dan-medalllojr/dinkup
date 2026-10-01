@@ -47,7 +47,18 @@ export default defineConfig({
             // Content-hashed, so cache-first is safe: a new build has a new name.
             urlPattern: ({ url }) => url.origin === self.location.origin && /\/assets\/(CourtMap|maplibre-gl-worker)-.*\.(js|css)$/.test(url.pathname),
             handler: 'CacheFirst',
-            options: { cacheName: 'map-engine', expiration: { maxEntries: 4 } },
+            options: {
+              cacheName: 'map-engine',
+              expiration: { maxEntries: 4 },
+              plugins: [
+                {
+                  // Only ever keep real scripts and styles. A missing old chunk
+                  // once came back as index.html and got cached as "JavaScript".
+                  cacheWillUpdate: async ({ response }) =>
+                    response.ok && /javascript|css/.test(response.headers.get('content-type') ?? '') ? response : null,
+                },
+              ],
+            },
           },
         ],
         cleanupOutdatedCaches: true,

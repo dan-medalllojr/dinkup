@@ -55,6 +55,14 @@ export function createApp() {
         },
       }),
     );
+    // A file under /assets that isn't there is an old build's chunk (an
+    // installed app that hasn't updated yet). Say so with a 404: answering with
+    // index.html made the browser try to run HTML as JavaScript, and the
+    // service worker cached that HTML under the script's name.
+    app.use('/assets', (_req, res) => {
+      res.setHeader('Cache-Control', 'no-cache');
+      res.status(404).type('text/plain').send('Not found');
+    });
     app.get('/{*splat}', (_req, res) => {
       res.setHeader('Cache-Control', 'no-cache');
       res.sendFile(path.join(clientDist, 'index.html'));
