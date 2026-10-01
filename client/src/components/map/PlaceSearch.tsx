@@ -53,6 +53,9 @@ export function PlaceSearch({ courts, onPick, onPickCourt }: Props) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const picking = useRef(false);
+  // The full placeholder is cut off on 320 px phones (the input has to stay
+  // 16px or iOS zooms in on focus), so drop "Maps" there.
+  const [narrow] = useState(() => window.matchMedia('(max-width: 360px)').matches);
   // Read through a ref so a courts refetch doesn't re-run the search.
   const courtsRef = useRef(courts);
   courtsRef.current = courts;
@@ -169,7 +172,7 @@ export function PlaceSearch({ courts, onPick, onPickCourt }: Props) {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onKeyDown}
           onFocus={() => suggestions.length && setOpen(true)}
-          placeholder="Search or paste a Maps link"
+          placeholder={narrow ? 'Search or paste a link' : 'Search or paste a Maps link'}
           aria-label="Search a place, or paste a Google Maps link or coordinates"
           enterKeyHint="search"
           autoComplete="off"

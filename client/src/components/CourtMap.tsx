@@ -111,6 +111,13 @@ export function CourtMap({
       return;
     }
     m.touchZoomRotate.disableRotation();
+    // The attribution wraps to two lines on narrow phones. Keep the zoom and
+    // locate buttons just above it, however tall it is (see .map-zoom in CSS).
+    const attrib = container.current.querySelector<HTMLElement>('.maplibregl-ctrl-attrib');
+    const attribSize = new ResizeObserver(() => {
+      if (attrib) wrap.current?.style.setProperty('--attrib-h', `${attrib.offsetHeight}px`);
+    });
+    if (attrib) attribSize.observe(attrib);
     m.on('click', (e) => {
       // Clicks on pins bubble up here too; those are handled by the pin.
       if ((e.originalEvent.target as HTMLElement).closest('.map-marker')) return;
@@ -120,6 +127,7 @@ export function CourtMap({
     mapRef.current = m;
     setMap(m);
     return () => {
+      attribSize.disconnect();
       m.remove();
       mapRef.current = null;
       markers.current.clear();

@@ -280,8 +280,10 @@ form { display: flex; flex-direction: column; gap: 0.9rem; margin: 1rem 0; }
 /* Controls drawn over the map. */
 .map-overlay { position: absolute; z-index: 800; }
 .map-zoom, .map-locate { right: 10px; display: flex; flex-direction: column; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgb(0 0 0 / 0.25); }
-.map-zoom { bottom: 44px; } /* clear the attribution strip */
-.map-locate { bottom: 140px; }
+/* Stack above the attribution, whose height CourtMap measures into --attrib-h
+   (it wraps to two lines on 320 px phones). 10px is MapLibre's control margin. */
+.map-zoom { bottom: calc(var(--attrib-h, 24px) + 20px); }
+.map-locate { bottom: calc(var(--attrib-h, 24px) + 116px); }
 .map-zoom button, .map-locate button {
   width: 44px;
   height: 44px;
