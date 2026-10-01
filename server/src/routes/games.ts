@@ -15,6 +15,7 @@ import { prisma } from '../db.ts';
 import type { Prisma } from '../generated/prisma/client.ts';
 import { findScheduleClash, gameInclude, lockGame, lockUser, toGame } from '../lib/games.ts';
 import { HttpError } from '../lib/http-error.ts';
+import { expireStaleResults, resultInclude, toResult } from '../lib/results.ts';
 import { fromDbLevel, toDbLevel } from '../lib/users.ts';
 import { requireAuth } from '../middleware/auth.ts';
 
@@ -138,7 +139,9 @@ gamesRouter.get('/:id', async (req, res) => {
   const id = z.uuid().safeParse(req.params.id);
   const game = id.success ? await prisma.game.findUnique({ where: { id: id.data }, include: gameInclude }) : null;
   if (!game) throw new HttpError(404, 'Game not found');
-  res.json({ game: toGame(game) });
+  await expireStaleResults();
+  const result = await prisma.matchResult.findUnique({ where: { gameId: game.id }, include: resultInclude });
+  res.json({ game: { ...toGame(game), result: result && toResult(result) } });
 });
 
 gamesRouter.post('/:id/cancel', requireAuth, async (req, res) => {

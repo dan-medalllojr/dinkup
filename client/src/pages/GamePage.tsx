@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
-import { directionsUrl, meetsMinLevel, SKILL_LABELS, type Game, type GameDisplayStatus } from '@dinkup/shared';
+import { directionsUrl, meetsMinLevel, REPORT_WINDOW_HOURS, SKILL_LABELS, type Game, type GameDisplayStatus, type MatchResult } from '@dinkup/shared';
 import { Avatar } from '../components/Avatar.tsx';
 import { Comments } from '../components/Comments.tsx';
+import { ReportResult } from '../components/ReportResult.tsx';
+import { ResultCard } from '../components/ResultCard.tsx';
 import { api, ApiError } from '../lib/api.ts';
 import { useAuth } from '../lib/auth.tsx';
 import { formatGameWhen } from '../lib/time.ts';
@@ -68,6 +70,9 @@ export function GamePage() {
   const isPlayer = !!user && game.players.some((p) => p.id === user.id);
   const levelOk = !user || meetsMinLevel(user.skillLevel, game.minSkillLevel);
   const joinable = game.status === 'open';
+  const ended = new Date(game.endsAt).getTime() <= Date.now();
+  const reportOpen = ended && game.status !== 'cancelled' && Date.now() < new Date(game.endsAt).getTime() + REPORT_WINDOW_HOURS * 3600_000;
+  const setResult = (result: MatchResult) => setGame((g) => (g ? { ...g, result } : g));
   const openSpots = game.capacity - game.players.length;
   const emptySlots = game.status === 'cancelled' ? 0 : Math.max(openSpots, 0);
 
@@ -175,6 +180,14 @@ export function GamePage() {
           </button>
         ) : null}
       </section>
+
+      {game.result ? <ResultCard result={game.result} onChange={setResult} /> : null}
+      {!game.result && isPlayer && reportOpen && game.players.length === game.capacity ? (
+        <ReportResult game={game} meId={user!.id} onReported={setResult} />
+      ) : null}
+      {!game.result && ended && !reportOpen && game.status !== 'cancelled' ? (
+        <p className="muted small center">No result was reported for this game.</p>
+      ) : null}
 
       <Comments gameId={game.id} hostId={game.host.id} isPlayer={isPlayer} />
     </>

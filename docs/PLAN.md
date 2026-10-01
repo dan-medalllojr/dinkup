@@ -121,6 +121,7 @@ Roughly one vibe-coding session per step. One commit (or PR) per step, with a ma
 9. **Deploy:** go live and invite a few real players to try it. ✅ Live at https://dinkup.onrender.com (Render free plan, Singapore; Neon `production` branch). Inviting players is next.
 10. **Results + leveling:** result reporting, loser confirmation, skill points, level-ups, and anti-boosting guards (see below). Test every guard.
     Also lock self-editing of skill level once a player has any confirmed result (until then it's a self-assessment). Otherwise anyone could skip the leveling system from the profile page.
+    ✅ Done, with every guard tested and both locks proven necessary. Disputes are final in v1.
 
 ## Feature: Results and Leveling
 

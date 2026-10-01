@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
+import type { MatchResult } from '@dinkup/shared';
+import { api } from '../lib/api.ts';
 import { DemoButton } from '../components/DemoButton.tsx';
 import { GameCard } from '../components/GameCard.tsx';
 import { InstallBanner } from '../components/InstallBanner.tsx';
@@ -8,6 +11,13 @@ import { useAuth } from '../lib/auth.tsx';
 export function HomePage() {
   const { user } = useAuth();
   const { games, error } = useGames('limit=3');
+  const [pending, setPending] = useState<MatchResult[]>([]);
+  useEffect(() => {
+    if (!user) return setPending([]);
+    api<{ results: MatchResult[] }>('GET', '/results/pending')
+      .then((res) => setPending(res.results))
+      .catch(() => {});
+  }, [user]);
 
   return (
     <>
@@ -32,6 +42,15 @@ export function HomePage() {
           </div>
         )}
       </section>
+
+      {pending.length > 0 ? (
+        <Link to={`/games/${pending[0]!.gameId}`} className="card card-link notice-warn">
+          <strong>
+            {pending.length === 1 ? `${pending[0]!.reportedBy.name} reported a win over you.` : `${pending.length} results are waiting for you.`}
+          </strong>{' '}
+          <span className="muted">Confirm or dispute it before it expires.</span>
+        </Link>
+      ) : null}
 
       <InstallBanner />
 

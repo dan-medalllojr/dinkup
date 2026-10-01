@@ -71,6 +71,8 @@ export type Game = {
   status: GameDisplayStatus;
   // Hosted by the demo cast: no one will actually be at the court.
   isDemo: boolean;
+  // Only on GET /api/games/:id (not in lists).
+  result?: import('./results').MatchResult | null;
   players: (PlayerSummary & { joinedAt: string })[];
   createdAt: string;
 };

@@ -37,7 +37,7 @@ npm run dev                           # API on :3000, app on http://localhost:51
 | `DIRECT_URL` | Direct | Prisma CLI: migrations, Studio |
 | `TEST_DATABASE_URL` | Direct, to a separate `dinkup_test` database | Tests (must end in `_test`; they wipe every table) |
 
-The Vite dev server proxies `/api` to Express, so the app and API share one origin in development and production.
+The Vite dev server proxies `/api` to Express, so the app and API share one origin in development and production. If port 3000 is already taken on your machine (Docker/OrbStack containers often use 3000–3003), run e.g. `PORT=4317 API_PORT=4317 npm run dev`. Check with `lsof -nP -iTCP:3000 -sTCP:LISTEN`: Node may print "listening" without an error even when OrbStack holds the port, and `/api` requests then reach the container instead.
 
 ## Scripts
 
@@ -50,6 +50,27 @@ The Vite dev server proxies `/api` to Express, so the app and API share one orig
 | `npm run typecheck` | Typecheck all workspaces |
 | `npm run build` | Build client, then bundle server |
 | `npm start` | Run the production server (serves the built client) |
+
+## How Dinkup prevents rating abuse
+
+Players level up by winning, so the system has to resist the obvious ways to game it. Every rule is enforced on the server, inside the confirming database transaction, and each one has a test.
+
+| Rule | How it's enforced | Test (`server/test/results.test.ts`) |
+|---|---|---|
+| **A win only counts when the loser confirms it** | Only a player on the losing side, and not the reporter, can confirm. Unconfirmed results expire after 48 h. | "refuses confirmation from winners (including the reporter) and outsiders", "expires results not confirmed within 48 hours" |
+| **Only real, scheduled games** | The game must exist in Dinkup, not be cancelled, and have ended. The result names exactly its players, who all joined before it started. One result per game (unique `game_id`). Reported within 24 h. | "only after the game ends, and within 24 hours", "rejects players who joined after the start, cancelled games, and second reports" |
+| **No farming one opponent** | Only 2 wins over the same opponent in any 30 days earn points. Later wins are recorded but earn 0. In doubles, hitting the cap against *either* loser blocks the point. | "counts only 2 wins over the same opponent in 30 days" |
+| **No farming beginners** | Beating a lower level earns 0. In doubles, the losing pair's *average* level counts. | "gives nothing for beating a lower level; doubles use the losing pair's average" |
+| **No throwaway accounts** | Points only if every loser's account is at least 7 days old *and* has at least 3 confirmed results. (Counting games merely *joined* would be fakeable: a booster could post throwaway games for an alt.) | "gives nothing against a new or unproven opponent account" |
+| **No skipping the ladder by hand** | Your self-set level locks after your first confirmed result. | "locks the self-set level after the first confirmed result" |
+| **No double counting under concurrency** | The result row and the winners' rows are locked (in id order, so no deadlocks). Removing either lock makes its race test fail. | "counts a doubles result once when both losers confirm…", "keeps the same-opponent cap when two wins are confirmed…" |
+
+Every result that earns 0 says why ("already beat this opponent 2 times in 30 days"), so the rules are visible to players.
+
+**Known limitations**
+- **Collusion rings:** N colluding accounts can rotate opponents to get around the per-pair cap. The account-age and confirmed-history rules slow this down but don't stop it. Next steps would be weighting points by opponent diversity, or flagging clusters of accounts that only play each other.
+- **Honest losers:** a loser can refuse to confirm a real loss. It expires and costs nothing, which is the safe way to fail.
+- **Disputes are final in v1:** a disputed result can't be corrected yet.
 
 ## Maps and place search
 

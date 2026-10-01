@@ -65,6 +65,7 @@ export default defineConfig({
   server: {
     port: 5173,
     // Same-origin in dev too, so session cookies behave like production.
-    proxy: { '/api': 'http://localhost:3000' },
+    // API_PORT: when 3000 is taken, run e.g. `PORT=4317 API_PORT=4317 npm run dev`.
+    proxy: { '/api': `http://localhost:${process.env.API_PORT ?? 3000}` },
   },
 });

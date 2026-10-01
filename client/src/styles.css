@@ -629,3 +629,41 @@ fieldset.segmented legend { padding: 0; margin-bottom: 0.3rem; font-weight: 600;
 .toast span { flex: 1; font-size: 0.9rem; }
 .toast .link-button { color: var(--surface); }
 @media (min-width: 720px) { .toast { bottom: 1.5rem; } }
+
+.stack-tight { display: flex; flex-direction: column; gap: 0.75rem; margin: 0; }
+.stack-tight h2 { margin: 0; }
+.stack-tight > p { margin: 0; }
+.result-card .section-header { margin-bottom: 0.25rem; }
+.result-line { margin: 0.25rem 0; font-size: 1.05rem; }
+.result-line a { color: inherit; }
+.result-score { margin: 0 0 0.5rem; font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.result-points { list-style: none; margin: 0 0 0.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.result-points li { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.9rem; color: var(--muted); }
+.result-points li.is-awarded { color: var(--text); }
+.level-up { color: var(--green); }
+.result-actions { display: flex; gap: 0.5rem; }
+.result-actions .button { flex: 1; }
+.partner-options { display: grid; grid-template-columns: 1fr; gap: 0.4rem; }
+.score-rows { display: flex; flex-direction: column; gap: 0.4rem; }
+.score-head, .score-row { display: grid; grid-template-columns: 4.5rem 1fr 1fr; gap: 0.5rem; align-items: center; }
+.score-head span { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.score-row input {
+  min-height: 44px;
+  width: 100%;
+  padding: 0 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+}
+.score-row input:focus { outline: 2px solid var(--green); outline-offset: 1px; }
+.score-actions { display: flex; gap: 1rem; }
+.pending-list { margin: 0.25rem 0 0.5rem; padding-left: 1.1rem; }
+.result-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.result-list a { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.8rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: inherit; text-decoration: none; }
+.result-list .badge { min-width: 28px; justify-content: center; }
+.result-list-main { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }

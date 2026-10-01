@@ -1,15 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { updateProfileSchema, type Game, type PreferredFormat, type SkillLevel } from '@dinkup/shared';
+import { POINTS_TO_LEVEL_UP, updateProfileSchema, type Game, type MatchResult, type PreferredFormat, type SkillLevel } from '@dinkup/shared';
 import { Avatar } from '../components/Avatar.tsx';
 import { GameCard } from '../components/GameCard.tsx';
+import { ResultList } from '../components/ResultList.tsx';
 import { api } from '../lib/api.ts';
 import { SelectField, TextField } from '../components/Field.tsx';
 import { useAuth } from '../lib/auth.tsx';
 import { errorsFromApi, validate, type FieldErrors } from '../lib/forms.ts';
 import { FORMAT_LABELS, formatOptions, levelLabel, levelOptions } from '../lib/labels.ts';
 
-const POINTS_TO_LEVEL_UP = 5;
 
 export function ProfilePage() {
   const { user, updateProfile, logout } = useAuth();
@@ -25,12 +25,22 @@ export function ProfilePage() {
   const [status, setStatus] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [myGames, setMyGames] = useState<Game[] | null>(null);
+  const [pending, setPending] = useState<MatchResult[]>([]);
+  const [history, setHistory] = useState<MatchResult[] | null>(null);
 
   useEffect(() => {
     api<{ games: Game[] }>('GET', '/games/mine')
       .then((res) => setMyGames(res.games))
       .catch(() => setMyGames([]));
-  }, []);
+    api<{ results: MatchResult[] }>('GET', '/results/pending')
+      .then((res) => setPending(res.results))
+      .catch(() => {});
+    api<{ results: MatchResult[] }>('GET', `/users/${me.id}/results`)
+      .then((res) => setHistory(res.results))
+      .catch(() => setHistory([]));
+  }, [me.id]);
+  // After the first confirmed result, only results move your level.
+  const levelLocked = (history?.length ?? 0) > 0;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -83,6 +93,22 @@ export function ProfilePage() {
         </div>
       </section>
 
+      {pending.length > 0 ? (
+        <section className="card notice-warn" aria-labelledby="pending-title">
+          <h2 id="pending-title">Results to confirm</h2>
+          <ul className="pending-list">
+            {pending.map((r) => (
+              <li key={r.id}>
+                <Link to={`/games/${r.gameId}`}>
+                  {r.reportedBy.name} reported a win over you ({r.score}) at {r.game.courtName}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="muted small">Confirm within 48 hours of the report, or it expires.</p>
+        </section>
+      ) : null}
+
       <section className="home-games">
         <div className="section-header">
           <h2>Your upcoming games</h2>
@@ -107,6 +133,19 @@ export function ProfilePage() {
         )}
       </section>
 
+      <section className="home-games">
+        <div className="section-header">
+          <h2>Match history</h2>
+        </div>
+        {history === null ? (
+          <p className="muted">Loading…</p>
+        ) : history.length === 0 ? (
+          <p className="card muted">No confirmed results yet. Win a game, report it, and have your opponent confirm it.</p>
+        ) : (
+          <ResultList results={history} playerId={me.id} />
+        )}
+      </section>
+
       <section className="card">
         <h2>Edit profile</h2>
         <form onSubmit={onSubmit} noValidate>
@@ -123,6 +162,8 @@ export function ProfilePage() {
             onChange={(e) => setValues({ ...values, skillLevel: e.target.value as SkillLevel })}
             options={levelOptions}
             error={errors.skillLevel}
+            disabled={levelLocked}
+            hint={levelLocked ? 'Set by your confirmed results now. Win confirmed games to level up.' : 'Your best guess for now. It locks after your first confirmed result.'}
           />
           <SelectField
             label="Preferred format"

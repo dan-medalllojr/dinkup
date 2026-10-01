@@ -38,10 +38,13 @@ model User {
   isDemo          Boolean         @default(false) @map("is_demo")
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  hostedGames Game[]        @relation("HostedGames")
+  hostedGames Game[]              @relation("HostedGames")
   gamesJoined GamePlayer[]
   comments    GameComment[]
-  courtsAdded Court[]       @relation("AddedCourts")
+  courtsAdded Court[]             @relation("AddedCourts")
+  reported    MatchResult[]       @relation("ReportedResults")
+  confirmed   MatchResult[]       @relation("ConfirmedResults")
+  results     MatchResultPlayer[]
 
   @@map("users")
 }
@@ -126,6 +129,7 @@ model Game {
   court    Court         @relation(fields: [courtId], references: [id], onDelete: Restrict)
   players  GamePlayer[]
   comments GameComment[]
+  result   MatchResult?
 
   @@index([startsAt])
   @@index([hostId])
@@ -158,4 +162,62 @@ model GameComment {
 
   @@index([gameId, createdAt])
   @@map("game_comments")
+}
+
+enum ResultStatus {
+  pending
+  confirmed
+  disputed
+  expired
+
+  @@map("result_status")
+}
+
+enum ResultSide {
+  winner
+  loser
+
+  @@map("result_side")
+}
+
+// One result per game (unique game_id). Points are only ever awarded when a
+// player on the losing side confirms; see routes/results.ts for every guard.
+model MatchResult {
+  id            String       @id @default(uuid()) @db.Uuid
+  gameId        String       @unique @map("game_id") @db.Uuid
+  reportedById  String       @map("reported_by_id") @db.Uuid
+  // e.g. "11-7, 9-11, 11-5", winners' points first.
+  score         String       @db.VarChar(60)
+  status        ResultStatus @default(pending)
+  confirmedById String?      @map("confirmed_by_id") @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  // When it was confirmed, disputed, or expired.
+  resolvedAt    DateTime?    @map("resolved_at") @db.Timestamptz(6)
+
+  game        Game                @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  reportedBy  User                @relation("ReportedResults", fields: [reportedById], references: [id], onDelete: Cascade)
+  confirmedBy User?               @relation("ConfirmedResults", fields: [confirmedById], references: [id], onDelete: SetNull)
+  players     MatchResultPlayer[]
+
+  // Lazy expiry scans pending results by age.
+  @@index([status, createdAt])
+  @@map("match_results")
+}
+
+model MatchResultPlayer {
+  resultId    String      @map("result_id") @db.Uuid
+  userId      String      @map("user_id") @db.Uuid
+  side        ResultSide
+  // Winners only, set on confirmation: 0 or 1, and why.
+  points      Int         @default(0)
+  pointsNote  String?     @map("points_note") @db.VarChar(40)
+  leveledUpTo SkillLevel? @map("leveled_up_to")
+
+  result MatchResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([resultId, userId])
+  // "Wins against this opponent in the last 30 days" joins through here.
+  @@index([userId, side])
+  @@map("match_result_players")
 }
