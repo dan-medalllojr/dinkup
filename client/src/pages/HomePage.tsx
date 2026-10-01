@@ -5,6 +5,7 @@ import { api } from '../lib/api.ts';
 import { DemoButton } from '../components/DemoButton.tsx';
 import { GameCard } from '../components/GameCard.tsx';
 import { InstallBanner } from '../components/InstallBanner.tsx';
+import { NearbyCourts } from '../components/NearbyCourts.tsx';
 import { useGames } from '../lib/useGames.ts';
 import { useGeolocation } from '../lib/useGeolocation.ts';
 import { useAuth } from '../lib/auth.tsx';
@@ -68,7 +69,7 @@ export function HomePage() {
         </div>
         {!geo.location && !geo.checking ? (
           <button className="button button-ghost button-small near-me" onClick={geo.locate} disabled={geo.locating}>
-            {geo.locating ? 'Locating…' : 'Show games near me'}
+            {geo.locating ? 'Locating…' : 'Show games and courts near me'}
           </button>
         ) : null}
         {geo.error ? <p className="form-error">{geo.error}</p> : null}
@@ -88,6 +89,8 @@ export function HomePage() {
           </ul>
         )}
       </section>
+
+      {geo.location ? <NearbyCourts location={geo.location} noGames={games !== null && games.length === 0} /> : null}
 
       <Link to="/courts" className="card card-link">
         <h2>Find a court</h2>

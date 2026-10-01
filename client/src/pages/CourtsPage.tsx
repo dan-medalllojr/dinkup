@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { distanceKm, type Court } from '@dinkup/shared';
 import { AddCourtPanel } from '../components/AddCourtPanel.tsx';
 import { CourtMap } from '../components/CourtMap.tsx';
@@ -25,7 +25,13 @@ export function CourtsPage() {
   const { user } = useAuth();
   const [courts, setCourts] = useState<Court[] | null>(null);
   const [error, setError] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // ?court=<id> opens that court's sheet (Home's "Courts near you" links here),
+  // and the URL follows the selection so a court can be linked to.
+  const [params, setParams] = useSearchParams();
+  const [selectedId, setSelectedId] = useState<string | null>(() => params.get('court'));
+  useEffect(() => {
+    if ((params.get('court') ?? null) !== selectedId) setParams(selectedId ? { court: selectedId } : {}, { replace: true });
+  }, [selectedId, params, setParams]);
   const geo = useGeolocation();
   const reconnect = useReconnect();
   const add = useAddCourt(courts ?? [], (court) => {
