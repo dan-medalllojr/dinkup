@@ -80,7 +80,7 @@ Everything here is free with no API keys:
 |---|---|---|
 | Map engine | [MapLibre GL](https://maplibre.org) | Runs in the browser (WebGL). Lazy-loaded on map pages only and cached on first use. |
 | Map tiles and styles | [OpenFreeMap](https://openfreemap.org) | **Liberty** (light), **Fiord** (dark). No key, no request limits. |
-| Search as you type | [Photon](https://photon.komoot.io) | Via `/api/geo/search`, limited to Cebu, 24 h cache. |
+| Search as you type | Dinkup's own courts first, then [Photon](https://photon.komoot.io) | Courts are matched in the browser ([change 4](docs/log/change-4-court-search.md)); places come via `/api/geo/search`, limited to Cebu, 24 h cache. |
 | Address for a dropped pin | [Nominatim](https://nominatim.org) | Via `/api/geo/reverse`, 1 request/second per its usage policy. |
 | Pasted Google Maps links | Parsed on the server | Via `/api/geo/link`. Short links are followed only within Google Maps domains (SSRF guard). No Google API is called. |
 

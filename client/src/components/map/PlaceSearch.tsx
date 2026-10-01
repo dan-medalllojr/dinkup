@@ -1,10 +1,20 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { isGoogleMapsHost, parseCoordinates, type PastedLocation, type Place } from '@dinkup/shared';
+import {
+  distanceKm,
+  DUPLICATE_COURT_METERS,
+  isGoogleMapsHost,
+  matchCourts,
+  parseCoordinates,
+  type Court,
+  type PastedLocation,
+  type Place,
+} from '@dinkup/shared';
 import { api, ApiError } from '../../lib/api.ts';
 
 export type PickedPlace = Place & { approximate?: boolean };
 
 type Suggestion =
+  | { kind: 'court'; court: Court }
   | { kind: 'place'; place: Place }
   | { kind: 'coords'; lat: number; lng: number }
   | { kind: 'link'; url: string };
@@ -20,13 +30,21 @@ function looksLikeMapsLink(text: string) {
   }
 }
 
-// Search as you type (Photon, via our server), plus two shortcuts for places
-// the open data doesn't know: paste coordinates ("10.3242, 123.9268") or a
-// Google Maps share link, and the map jumps there.
+// Search as you type: Dinkup's own courts first (matched instantly in the
+// browser), then places from Photon via our server. Plus two shortcuts for
+// places the open data doesn't know: paste coordinates ("10.3242, 123.9268")
+// or a Google Maps share link, and the map jumps there.
 //
 // Not a <form>: the map can sit inside another form (Post a game), and nested
 // forms are invalid; Enter here must never submit the outer form.
-export function PlaceSearch({ onPick }: { onPick: (place: PickedPlace) => void }) {
+type Props = {
+  courts: Court[];
+  onPick: (place: PickedPlace) => void;
+  /** A Dinkup court was chosen: behave as if its pin was tapped. */
+  onPickCourt: (court: Court) => void;
+};
+
+export function PlaceSearch({ courts, onPick, onPickCourt }: Props) {
   const listId = useId();
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -35,6 +53,9 @@ export function PlaceSearch({ onPick }: { onPick: (place: PickedPlace) => void }
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const picking = useRef(false);
+  // Read through a ref so a courts refetch doesn't re-run the search.
+  const courtsRef = useRef(courts);
+  courtsRef.current = courts;
 
   useEffect(() => {
     const text = query.trim();
@@ -54,20 +75,27 @@ export function PlaceSearch({ onPick }: { onPick: (place: PickedPlace) => void }
       setOpen(true);
       return;
     }
-    if (text.length < 3) {
-      setSuggestions([]);
-      setOpen(false);
-      return;
-    }
+    const hits = text.length >= 2 ? matchCourts(courtsRef.current, text) : [];
+    const courtSuggestions: Suggestion[] = hits.map((court) => ({ kind: 'court', court }));
+    setSuggestions(courtSuggestions);
+    setActive(0);
+    setOpen(hits.length > 0);
+    if (text.length < 3) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setBusy(true);
       api<{ places: Place[] }>('GET', `/geo/search?q=${encodeURIComponent(text)}`, undefined, { signal: controller.signal })
         .then((res) => {
-          setSuggestions(res.places.map((place) => ({ kind: 'place', place })));
-          setActive(0);
+          // A place at one of our courts (OSM knows a few) shows as the court.
+          const extra: Suggestion[] = [];
+          for (const place of res.places) {
+            const court = courtsRef.current.find((c) => distanceKm(c, place) * 1000 < DUPLICATE_COURT_METERS);
+            if (!court) extra.push({ kind: 'place', place });
+            else if (!hits.includes(court) && !extra.some((s) => s.kind === 'court' && s.court === court)) extra.push({ kind: 'court', court });
+          }
+          setSuggestions([...courtSuggestions, ...extra]);
           setOpen(true);
-          if (res.places.length === 0) setMessage('No matches in Cebu. Try another name, paste a Google Maps link, or tap the map.');
+          if (hits.length + extra.length === 0) setMessage('No matches in Cebu. Try another name, paste a Google Maps link, or tap the map.');
         })
         .catch((err) => {
           if (controller.signal.aborted) return;
@@ -83,7 +111,11 @@ export function PlaceSearch({ onPick }: { onPick: (place: PickedPlace) => void }
 
   async function choose(s: Suggestion) {
     setOpen(false);
-    if (s.kind === 'place') {
+    if (s.kind === 'court') {
+      picking.current = true;
+      setQuery(s.court.name);
+      onPickCourt(s.court);
+    } else if (s.kind === 'place') {
       picking.current = true;
       setQuery(s.place.label);
       onPick(s.place);
@@ -152,7 +184,17 @@ export function PlaceSearch({ onPick }: { onPick: (place: PickedPlace) => void }
           {suggestions.map((s, i) => (
             <li key={i} id={`${listId}-${i}`} role="option" aria-selected={i === active}>
               <button type="button" className={i === active ? 'is-active' : undefined} onMouseDown={(e) => e.preventDefault()} onClick={() => void choose(s)}>
-                {s.kind === 'place' ? (
+                {s.kind === 'court' ? (
+                  <>
+                    <strong>
+                      <span className="map-search-pin" aria-hidden />
+                      {s.court.name}
+                    </strong>
+                    <span>
+                      {[s.court.city, s.court.upcomingGames > 0 ? `${s.court.upcomingGames} upcoming ${s.court.upcomingGames === 1 ? 'game' : 'games'}` : 'Court on Dinkup'].join(' · ')}
+                    </span>
+                  </>
+                ) : s.kind === 'place' ? (
                   <>
                     <strong>{s.place.label}</strong>
                     <span>{[s.place.address, s.place.city].filter(Boolean).join(', ')}</span>

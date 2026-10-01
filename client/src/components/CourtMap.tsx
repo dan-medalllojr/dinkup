@@ -147,11 +147,7 @@ export function CourtMap({
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           const c = latest.current.courts.find((x) => x.id === court.id);
-          if (!c) return;
-          // While adding a court, tapping an existing pin means "here": it
-          // moves the draft pin there, which brings up "Is it one of these?".
-          if (latest.current.addMode) latest.current.onDraftMove?.({ lat: c.lat, lng: c.lng });
-          else latest.current.onSelect(c.id);
+          if (c) pickCourt(c);
         });
         entry = { el, marker: new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([court.lng, court.lat]).addTo(map) };
         markers.current.set(court.id, entry);
@@ -257,6 +253,20 @@ export function CourtMap({
     } else draftMarker.current.setLngLat([draftPin.lng, draftPin.lat]);
   }, [map, draftPin]);
 
+  // Tapping a pin and choosing a court in search do the same thing. While
+  // adding a court, it means "here": the draft pin moves there, which brings
+  // up "Is it one of these?".
+  function pickCourt(c: Court) {
+    if (latest.current.addMode) latest.current.onDraftMove?.({ lat: c.lat, lng: c.lng });
+    else latest.current.onSelect(c.id);
+  }
+
+  function searchPickCourt(c: Court) {
+    // Out of add mode, selecting flies there (see above); in it, fly ourselves.
+    if (latest.current.addMode) map?.flyTo({ center: [c.lng, c.lat], zoom: 17, duration: 700 });
+    pickCourt(c);
+  }
+
   function pickPlace(place: PickedPlace) {
     map?.flyTo({ center: [place.lng, place.lat], zoom: 17, duration: 700 });
     onPlacePicked?.(place);
@@ -275,7 +285,7 @@ export function CourtMap({
   return (
     <div ref={wrap} className={addMode ? 'map-wrap is-adding' : 'map-wrap'}>
       <div ref={container} className="map" />
-      {search ? <PlaceSearch onPick={pickPlace} /> : null}
+      {search ? <PlaceSearch courts={courts} onPick={pickPlace} onPickCourt={searchPickCourt} /> : null}
       {onLocate ? (
         <div className="map-overlay map-locate">
           <button type="button" aria-label="Show my location" title="Show my location" className={locating ? 'is-busy' : undefined} onClick={locate}>
