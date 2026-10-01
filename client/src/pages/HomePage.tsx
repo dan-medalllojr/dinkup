@@ -82,6 +82,11 @@ export function HomePage() {
         <h2>Find a court</h2>
         <p className="muted">Pickleball courts around Metro Cebu, on a map, with directions.</p>
       </Link>
+
+      <Link to="/install" className="card card-link">
+        <h2>Invite your group</h2>
+        <p className="muted">Share a link or QR code that installs Dinkup on any phone.</p>
+      </Link>
     </>
   );
 }

@@ -2,6 +2,8 @@
 
 **Find a pickleball game in Cebu.** Live at **https://dinkup.onrender.com**
 
+**Invite players:** share **https://dinkup.onrender.com/install**. It shows each person the right install steps for their phone and browser (including "open in Chrome/Safari first" when the link is opened inside Messenger or Facebook), plus a QR code. See [`docs/log/change-5-install-link.md`](docs/log/change-5-install-link.md).
+
 A PWA for finding opponents, posting games at local courts, and leveling up through confirmed wins.
 
 Built as a vibe-coding portfolio project. See [`docs/PLAN.md`](docs/PLAN.md) for the full plan and [`docs/log/`](docs/log/) for the step-by-step build log (prompts, what the AI got right, what had to be fixed).

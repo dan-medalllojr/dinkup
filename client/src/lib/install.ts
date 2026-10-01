@@ -33,11 +33,29 @@ export function isStandalone() {
   );
 }
 
+export function isIos() {
+  const ua = navigator.userAgent;
+  return /iPhone|iPad|iPod/.test(ua) || (ua.includes('Macintosh') && navigator.maxTouchPoints > 1);
+}
+
+export const isAndroid = () => /Android/.test(navigator.userAgent);
+
 // iPhone/iPad Safari has no install API; users add it from the Share menu.
 export function isIosSafari() {
   const ua = navigator.userAgent;
-  const ios = /iPhone|iPad|iPod/.test(ua) || (ua.includes('Macintosh') && navigator.maxTouchPoints > 1);
-  return ios && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+  return isIos() && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua) && !inAppBrowser();
+}
+
+// Links shared in chat apps open in the app's own browser, which can't
+// install anything. Returns the app's name so we can say "open it in Chrome".
+export function inAppBrowser(): string | null {
+  const ua = navigator.userAgent;
+  if (/Messenger|Orca-Android/.test(ua)) return 'Messenger';
+  if (/FBAN|FBAV|FB_IAB|FBIOS/.test(ua)) return 'Facebook';
+  if (/Instagram/.test(ua)) return 'Instagram';
+  if (/\bLine\//.test(ua)) return 'LINE';
+  if (/musical_ly|BytedanceWebview|TikTok/.test(ua)) return 'TikTok';
+  return null;
 }
 
 type InstallState = { canPrompt: boolean; installed: boolean };
