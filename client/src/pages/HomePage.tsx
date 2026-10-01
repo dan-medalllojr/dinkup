@@ -6,11 +6,16 @@ import { DemoButton } from '../components/DemoButton.tsx';
 import { GameCard } from '../components/GameCard.tsx';
 import { InstallBanner } from '../components/InstallBanner.tsx';
 import { useGames } from '../lib/useGames.ts';
+import { useGeolocation } from '../lib/useGeolocation.ts';
 import { useAuth } from '../lib/auth.tsx';
 
 export function HomePage() {
   const { user } = useAuth();
-  const { games, error } = useGames('limit=3');
+  const geo = useGeolocation();
+  const near = geo.location ? `&near=${geo.location.lat.toFixed(4)},${geo.location.lng.toFixed(4)}` : '';
+  // Wait the moment it takes to learn whether location is already allowed, so
+  // the list doesn't flip from "soonest" to "nearest" right after it appears.
+  const { games, error } = useGames(`limit=3${near}`, { skip: geo.checking });
   const [pending, setPending] = useState<MatchResult[]>([]);
   useEffect(() => {
     if (!user) return setPending([]);
@@ -56,11 +61,17 @@ export function HomePage() {
 
       <section className="home-games">
         <div className="section-header">
-          <h2>Upcoming games</h2>
+          <h2>{geo.location ? 'Games near you' : 'Upcoming games'}</h2>
           <Link to="/games" className="small">
             See all
           </Link>
         </div>
+        {!geo.location && !geo.checking ? (
+          <button className="button button-ghost button-small near-me" onClick={geo.locate} disabled={geo.locating}>
+            {geo.locating ? 'Locating…' : 'Show games near me'}
+          </button>
+        ) : null}
+        {geo.error ? <p className="form-error">{geo.error}</p> : null}
         {error && games === null ? (
           <p className="card muted">{error}</p>
         ) : games === null ? (
