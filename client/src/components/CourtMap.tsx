@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import type { Map as MLMap, Marker } from 'maplibre-gl';
-import { CEBU_CENTER, type Court, type LatLng } from '@dinkup/shared';
+import { CEBU_CENTER, distanceKm, type Court, type LatLng } from '@dinkup/shared';
 import { useColorScheme } from '../lib/useColorScheme.ts';
 import { PlaceSearch, type PickedPlace } from './map/PlaceSearch.tsx';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -29,6 +29,8 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   userLocation?: LatLng | null;
+  /** Fit the map to this spot plus every court within radiusKm of it. */
+  focus?: { center: LatLng; radiusKm: number } | null;
   onLocate?: () => void;
   locating?: boolean;
   /** Badge number per court; defaults to its upcoming games. */
@@ -66,6 +68,7 @@ export function CourtMap({
   selectedId,
   onSelect,
   userLocation = null,
+  focus = null,
   onLocate,
   locating = false,
   countFor = (c) => c.upcomingGames,
@@ -172,10 +175,12 @@ export function CourtMap({
     }
   }, [map, courts, selectedId, countFor, addMode]);
 
-  // First view: jump to a preselected court, otherwise fit every court.
+  // First view: jump to a preselected court, otherwise fit every court (or,
+  // when we know where the player is, the courts around them; see below).
   const fitted = useRef(false);
   useEffect(() => {
     if (!map || fitted.current || courts.length === 0) return;
+    if (focus && !selectedId) return;
     fitted.current = true;
     const selected = courts.find((c) => c.id === selectedId);
     if (selected) {
@@ -185,7 +190,27 @@ export function CourtMap({
       for (const c of courts) bounds.extend([c.lng, c.lat]);
       map.fitBounds(bounds, { padding: 48, maxZoom: 14, duration: 0 });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- first view only
   }, [map, courts, selectedId]);
+
+  // Near me: frame the player and every court within the radius, games or
+  // not. With none in range, frame the closest 3 so the map isn't empty.
+  // Re-fits when the radius or location changes, never on other re-renders.
+  const focusedOn = useRef('');
+  useEffect(() => {
+    if (!map || !focus || courts.length === 0 || selectedId) return;
+    const key = `${focus.center.lat.toFixed(3)},${focus.center.lng.toFixed(3)}@${focus.radiusKm}`;
+    if (focusedOn.current === key) return;
+    const first = focusedOn.current === '' && !fitted.current;
+    focusedOn.current = key;
+    fitted.current = true;
+    const byDistance = courts.map((c) => ({ c, km: distanceKm(focus.center, c) })).sort((a, b) => a.km - b.km);
+    const inRange = byDistance.filter((d) => d.km <= focus.radiusKm);
+    const framed = (inRange.length > 0 ? inRange : byDistance.slice(0, 3)).map((d) => d.c);
+    const bounds = new maplibregl.LngLatBounds([focus.center.lng, focus.center.lat], [focus.center.lng, focus.center.lat]);
+    for (const c of framed) bounds.extend([c.lng, c.lat]);
+    map.fitBounds(bounds, { padding: 56, maxZoom: 15, duration: first ? 0 : 600 });
+  }, [map, focus, courts, selectedId]);
 
   // Fly to a newly selected court, keeping it above the bottom sheet. The
   // nudge scales with the map's height so short maps (small phones) don't

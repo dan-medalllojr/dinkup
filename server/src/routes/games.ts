@@ -105,10 +105,11 @@ gamesRouter.get('/', async (req, res) => {
     orderBy: { startsAt: 'asc' },
     take: q.near ? MAX_GAMES_FOR_DISTANCE_SORT : q.limit,
   });
-  const games: GameListItem[] = rows.map((g) => ({
+  let games: GameListItem[] = rows.map((g) => ({
     ...toGame(g, now),
     distanceKm: q.near ? distanceKm(q.near, g.court) : null,
   }));
+  if (q.within !== undefined) games = games.filter((g) => g.distanceKm! <= q.within!);
   // Nearest first when we know where the player is; soonest breaks ties.
   if (q.near) games.sort((a, b) => a.distanceKm! - b.distanceKm! || a.startsAt.localeCompare(b.startsAt));
 

@@ -5,18 +5,26 @@ import { api } from '../lib/api.ts';
 import { DemoButton } from '../components/DemoButton.tsx';
 import { GameCard } from '../components/GameCard.tsx';
 import { InstallBanner } from '../components/InstallBanner.tsx';
-import { NearbyCourts } from '../components/NearbyCourts.tsx';
+import { NearbyCourts, ShowMore } from '../components/NearbyCourts.tsx';
+import { RadiusPicker } from '../components/RadiusPicker.tsx';
 import { useGames } from '../lib/useGames.ts';
 import { useGeolocation } from '../lib/useGeolocation.ts';
 import { useAuth } from '../lib/auth.tsx';
+import { useNearRadius } from '../lib/useNearRadius.ts';
+
+const SHOWN = 5;
 
 export function HomePage() {
   const { user } = useAuth();
   const geo = useGeolocation();
-  const near = geo.location ? `&near=${geo.location.lat.toFixed(4)},${geo.location.lng.toFixed(4)}` : '';
+  const [radius, setRadius] = useNearRadius();
+  const [showAllGames, setShowAllGames] = useState(false);
+  const near = geo.location ? `&near=${geo.location.lat.toFixed(4)},${geo.location.lng.toFixed(4)}&within=${radius}` : '';
   // Wait the moment it takes to learn whether location is already allowed, so
   // the list doesn't flip from "soonest" to "nearest" right after it appears.
-  const { games, error } = useGames(`limit=3${near}`, { skip: geo.checking });
+  // Near me: every game in range (the API caps it). Otherwise the next 3.
+  const { games, error } = useGames(near ? `limit=50${near}` : 'limit=3', { skip: geo.checking });
+  const shownGames = games && !showAllGames ? games.slice(0, SHOWN) : games;
   const [pending, setPending] = useState<MatchResult[]>([]);
   useEffect(() => {
     if (!user) return setPending([]);
@@ -62,7 +70,7 @@ export function HomePage() {
 
       <section className="home-games">
         <div className="section-header">
-          <h2>{geo.location ? 'Games near you' : 'Upcoming games'}</h2>
+          <h2>{geo.location ? `Games within ${radius} km` : 'Upcoming games'}</h2>
           <Link to="/games" className="small">
             See all
           </Link>
@@ -73,24 +81,39 @@ export function HomePage() {
           </button>
         ) : null}
         {geo.error ? <p className="form-error">{geo.error}</p> : null}
+        {geo.location ? (
+          <RadiusPicker
+            value={radius}
+            onChange={(km) => {
+              setRadius(km);
+              setShowAllGames(false);
+            }}
+          />
+        ) : null}
         {error && games === null ? (
           <p className="card muted">{error}</p>
         ) : games === null ? (
           <p className="muted">Loading games…</p>
         ) : games.length === 0 ? (
-          <p className="card muted">No games posted yet. {user ? <Link to="/games/new">Post the first one</Link> : null}</p>
+          <p className="card muted">
+            {geo.location ? `No games within ${radius} km yet.` : 'No games posted yet.'}{' '}
+            {user ? <Link to="/games/new">Post the first one</Link> : null}
+          </p>
         ) : (
-          <ul className="game-list">
-            {games.map((g) => (
-              <li key={g.id}>
-                <GameCard game={g} />
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="game-list">
+              {shownGames!.map((g) => (
+                <li key={g.id}>
+                  <GameCard game={g} />
+                </li>
+              ))}
+            </ul>
+            {geo.location ? <ShowMore hidden={games.length - shownGames!.length} what="game" onClick={() => setShowAllGames(true)} /> : null}
+          </>
         )}
       </section>
 
-      {geo.location ? <NearbyCourts location={geo.location} noGames={games !== null && games.length === 0} /> : null}
+      {geo.location ? <NearbyCourts location={geo.location} radiusKm={radius} noGames={games !== null && games.length === 0} /> : null}
 
       <Link to="/courts" className="card card-link">
         <h2>Find a court</h2>

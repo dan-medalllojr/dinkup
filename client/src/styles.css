@@ -566,6 +566,11 @@ fieldset.segmented legend { padding: 0; margin-bottom: 0.3rem; font-weight: 600;
 .home-games { display: flex; flex-direction: column; }
 .home-courts { display: flex; flex-direction: column; }
 .home-courts > p { margin: 0 0 0.6rem; }
+.near-radius { margin-bottom: 0.75rem; }
+.near-radius .segmented-options { gap: 0.35rem; }
+.near-radius .segmented-option { min-height: 44px; padding: 0.3rem 0.2rem; font-size: 0.85rem; white-space: nowrap; }
+.show-more { margin-top: 0.6rem; }
+.court-group { margin: 1rem 0 0.6rem; font-size: 1rem; }
 .court-name { overflow-wrap: anywhere; }
 .empty-state h2 { margin-bottom: 0.4rem; }
 

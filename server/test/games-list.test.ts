@@ -116,11 +116,25 @@ describe('GET /api/games', () => {
     expect(ids(res)).toEqual([near.id]);
   });
 
+  it('keeps only games within the given distance', async () => {
+    const mandaue = await court('Mandaue', 10.3242, 123.9268);
+    const talisay = await court('Talisay', 10.2685, 123.8364);
+    const near = await game(mandaue.id, { startsAt: inHours(30) });
+    await game(talisay.id, { startsAt: inHours(2) }); // ~11 km away
+
+    const res = await request(app).get('/api/games?near=10.33,123.93&within=5').expect(200);
+    expect(ids(res)).toEqual([near.id]);
+    const wide = await request(app).get('/api/games?near=10.33,123.93&within=100').expect(200);
+    expect(wide.body.games).toHaveLength(2);
+  });
+
   it('rejects malformed filters', async () => {
     await request(app).get('/api/games?date=2026-13-40').expect(400);
     await request(app).get('/api/games?level=9.0').expect(400);
     await request(app).get('/api/games?near=somewhere').expect(400);
     await request(app).get('/api/games?near=200,500').expect(400);
     await request(app).get('/api/games?limit=0').expect(400);
+    await request(app).get('/api/games?within=5').expect(400); // needs near
+    await request(app).get('/api/games?near=10.33,123.93&within=500').expect(400);
   });
 });

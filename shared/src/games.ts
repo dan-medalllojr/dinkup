@@ -85,7 +85,12 @@ export function meetsMinLevel(level: SkillLevel, min: SkillLevel | null): boolea
 export type GameListItem = Game & { distanceKm: number | null };
 
 // Query-string filters for GET /api/games. Everything arrives as a string.
-export const listGamesQuerySchema = z.object({
+// Distances a player can limit "near me" to, in km. 100 km covers Cebu island.
+export const NEAR_RADII_KM = [5, 10, 25, 50, 100] as const;
+export const MAX_NEAR_RADIUS_KM = 100;
+
+export const listGamesQuerySchema = z
+  .object({
   date: z.iso.date().optional(),
   level: z.enum(SKILL_LEVELS).optional(),
   format: z.enum(GAME_FORMATS).optional(),
@@ -99,8 +104,11 @@ export const listGamesQuerySchema = z.object({
     })
     .refine((p) => Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180, 'near is out of range')
     .optional(),
+  // Only games within this many km of `near`.
+  within: z.coerce.number().positive().max(MAX_NEAR_RADIUS_KM).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
-});
+})
+  .refine((q) => q.within === undefined || q.near !== undefined, { path: ['within'], message: 'within needs near' });
 export type ListGamesQuery = z.input<typeof listGamesQuerySchema>;
 
 export const COMMENT_MAX_LENGTH = 500;
