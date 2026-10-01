@@ -436,6 +436,7 @@ form { display: flex; flex-direction: column; gap: 0.9rem; margin: 1rem 0; }
 @media (max-width: 360px) { .row { grid-template-columns: 1fr; } }
 .section-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
 .section-header h2 { margin: 0; }
+.near-me { margin-bottom: 0.75rem; }
 
 fieldset.segmented { border: 0; padding: 0; margin: 0; min-width: 0; }
 fieldset.segmented legend { padding: 0; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.9rem; }
