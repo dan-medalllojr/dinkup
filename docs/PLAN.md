@@ -109,7 +109,7 @@ Notes:
 Roughly one vibe-coding session per step. One commit (or PR) per step, with a matching `docs/log/step-N.md`.
 
 1. **Setup + auth:** monorepo, Postgres, Prisma schema for users, register / login / logout, profile page with skill level and format.
-2. **Courts:** courts table, seed real Cebu courts (hand-curated — OSM has little pickleball data for Cebu), map showing them. Expect to fix Leaflet's default marker icons under Vite. ✅ Done with 4 verified pins; ~18 more venues listed in `server/prisma/data/courts.ts` waiting for coordinates.
+2. **Courts:** courts table, seed real Cebu courts (hand-curated — OSM has little pickleball data for Cebu), map showing them. Expect to fix Leaflet's default marker icons under Vite. ✅ Done with 4 verified pins at launch; 17 more pinned after launch (21 total, one venue still unconfirmed). See `docs/log/change-3-court-pins.md`.
 3. **Post a game:** pick a court on the map, set date/time/duration, format, min skill level. Host auto-joins. ✅ Done, plus host cancel, a schedule-clash check, and a 5-upcoming-games cap.
 4. **Browse games:** list + map view, filters by date and skill, sort by distance. Guest-readable. ✅ Done, plus a format filter, filters kept in the URL, and a bottom tab bar on phones.
 5. **Join / leave:** capacity limits enforced in a transaction with a row lock on the game (`SELECT … FOR UPDATE`) so two people can't take the last spot at once. Tests for the race.

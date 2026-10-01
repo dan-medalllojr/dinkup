@@ -45,7 +45,7 @@ The Vite dev server proxies `/api` to Express, so the app and API share one orig
 |---|---|
 | `npm run dev` | API (tsx watch) + client (Vite) |
 | `npm run db:deploy --workspace server` | Apply migrations without prompts (Neon / production) |
-| `npm run db:seed --workspace server` | Upsert courts from `server/prisma/data/courts.ts` (safe to re-run) |
+| `npm run db:seed --workspace server` | Upsert courts from `server/prisma/data/courts.ts` (safe to re-run; skips a curated court if a player already added one at that spot) |
 | `npm test` | API tests (Vitest + Supertest) against the `dinkup_test` database |
 | `npm run typecheck` | Typecheck all workspaces |
 | `npm run build` | Build client, then bundle server |
@@ -84,7 +84,7 @@ Everything here is free with no API keys:
 | Address for a dropped pin | [Nominatim](https://nominatim.org) | Via `/api/geo/reverse`, 1 request/second per its usage policy. |
 | Pasted Google Maps links | Parsed on the server | Via `/api/geo/link`. Short links are followed only within Google Maps domains (SSRF guard). No Google API is called. |
 
-Courts can be added by players (public, labeled "Added by …"). See [`docs/log/change-1-maps.md`](docs/log/change-1-maps.md) and [`docs/log/change-2-maplibre.md`](docs/log/change-2-maplibre.md), including why the Google Places API wasn't used: its data may only be shown on a Google map, and its coordinates can be kept for only 30 days.
+The map ships with 21 hand-verified Metro Cebu courts (see [`docs/log/change-3-court-pins.md`](docs/log/change-3-court-pins.md) for how each pin was checked). Courts can also be added by players (public, labeled "Added by …"). See [`docs/log/change-1-maps.md`](docs/log/change-1-maps.md) and [`docs/log/change-2-maplibre.md`](docs/log/change-2-maplibre.md), including why the Google Places API wasn't used: its data may only be shown on a Google map, and its coordinates can be kept for only 30 days.
 
 ## Deploying (Render + Neon)
 
