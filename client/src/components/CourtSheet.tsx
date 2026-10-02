@@ -54,6 +54,9 @@ export function CourtSheet({ court, onClose, distanceKm = null, games }: Props) 
       </div>
       <h3 className="sheet-subtitle">Upcoming games</h3>
       <CourtGames games={list} />
+      <p className="small sheet-report">
+        <Link to={`/about?court=${court.id}#feedback`}>Wrong pin or details? Tell us</Link>
+      </p>
     </section>
   );
 }

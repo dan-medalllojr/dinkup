@@ -73,6 +73,11 @@ export function ResultCard({ result, onChange }: { result: MatchResult; onChange
           ))}
         </ul>
       ) : null}
+      {result.status === 'confirmed' ? (
+        <p className="small">
+          <Link to="/about#leveling">How points work</Link>
+        </p>
+      ) : null}
 
       {result.status === 'pending' ? (
         <p className="muted small">

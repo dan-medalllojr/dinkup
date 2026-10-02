@@ -1,4 +1,5 @@
 export * from './constants';
+export * from './feedback';
 export * from './notifications';
 export * from './schemas';
 export * from './geo';
