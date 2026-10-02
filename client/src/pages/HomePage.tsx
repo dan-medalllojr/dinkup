@@ -124,6 +124,10 @@ export function HomePage() {
         <h2>Invite your group</h2>
         <p className="muted">Share a link or QR code that installs Dinkup on any phone.</p>
       </Link>
+
+      <p className="center small">
+        <Link to="/about">About Dinkup</Link> · <Link to="/about#leveling">How points work</Link> · <Link to="/about#feedback">Send feedback</Link>
+      </p>
     </>
   );
 }

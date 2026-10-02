@@ -47,6 +47,7 @@ model User {
   results     MatchResultPlayer[]
   notifications     Notification[]
   pushSubscriptions PushSubscription[]
+  feedback          Feedback[]
 
   @@map("users")
 }
@@ -91,6 +92,7 @@ model Court {
   // SetNull: if the player deletes their account, the court stays.
   addedBy User?  @relation("AddedCourts", fields: [addedById], references: [id], onDelete: SetNull)
   games   Game[]
+  feedback Feedback[]
 
   @@index([addedById])
   @@map("courts")
@@ -276,4 +278,35 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscriptions")
+}
+
+enum FeedbackKind {
+  bug
+  court
+  idea
+  other
+
+  @@map("feedback_kind")
+}
+
+// Messages from the About page's feedback form (guests too). Read straight
+// from the database for now; there's no admin screen.
+model Feedback {
+  id        String       @id @default(uuid()) @db.Uuid
+  kind      FeedbackKind
+  message   String       @db.VarChar(1000)
+  // Optional: where to reply, for guests (logged-in players have an email).
+  contact   String?      @db.VarChar(200)
+  // "Report a wrong pin" links here with the court filled in.
+  courtId   String?      @map("court_id") @db.Uuid
+  userId    String?      @map("user_id") @db.Uuid
+  userAgent String?      @map("user_agent") @db.VarChar(300)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Feedback outlives a deleted account or court, minus the link.
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  court Court? @relation(fields: [courtId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("feedback")
 }

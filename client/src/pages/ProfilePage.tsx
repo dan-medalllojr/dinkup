@@ -183,6 +183,9 @@ export function ProfilePage() {
         </form>
       </section>
 
+      <p className="center small">
+        <Link to="/notifications">Notifications</Link> · <Link to="/about">About Dinkup</Link> · <Link to="/about#feedback">Send feedback</Link>
+      </p>
       <p className="muted small center">Signed in as {me.email}</p>
       <button className="button button-ghost button-block" onClick={onLogout}>
         Log out
