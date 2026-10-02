@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; }
+  .og { width: 1200px; height: 630px; box-sizing: border-box; position: relative; overflow: hidden;
+        background: #1f7a4d; color: #fff; font-family: Inter, sans-serif; display: flex; align-items: center; padding: 0 88px; gap: 64px; }
+  /* Court lines in the background */
+  .court { position: absolute; right: -120px; top: 50%; transform: translateY(-50%) rotate(-12deg); width: 560px; height: 820px;
+           border: 6px solid rgb(255 255 255 / 0.12); border-radius: 8px; }
+  .court::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 6px solid rgb(255 255 255 / 0.12); }
+  .court::after { content: ''; position: absolute; left: 0; right: 0; top: 34%; bottom: 34%; border-top: 6px solid rgb(255 255 255 / 0.12); border-bottom: 6px solid rgb(255 255 255 / 0.12); }
+  .ball { width: 230px; height: 230px; flex-shrink: 0; position: relative; z-index: 1; filter: drop-shadow(0 12px 24px rgb(0 0 0 / 0.25)); }
+  .text { position: relative; z-index: 1; }
+  h1 { margin: 0; font-size: 112px; font-weight: 800; letter-spacing: -3px; line-height: 1; }
+  .tag { margin: 18px 0 0; font-size: 46px; font-weight: 700; color: #c8e64b; line-height: 1.15; letter-spacing: -0.5px; }
+  .facts { margin: 34px 0 0; display: flex; gap: 14px; flex-wrap: wrap; }
+  .facts span { font-size: 26px; font-weight: 500; padding: 10px 20px; border-radius: 999px; background: rgb(255 255 255 / 0.14); }
+  .url { position: absolute; left: 88px; bottom: 40px; font-size: 24px; font-weight: 500; color: rgb(255 255 255 / 0.75); z-index: 1; }
+</style></head><body>
+<div class="og">
+  <div class="court"></div>
+  <svg class="ball" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#c8e64b"/><g fill="#1f7a4d"><circle cx="22" cy="20" r="4"/><circle cx="42" cy="20" r="4"/><circle cx="32" cy="32" r="4"/><circle cx="22" cy="44" r="4"/><circle cx="42" cy="44" r="4"/></g></svg>
+  <div class="text">
+    <h1>Dinkup</h1>
+    <p class="tag">Find a pickleball game in Cebu.</p>
+    <div class="facts"><span>22 courts</span><span>Post or join games</span><span>No app store</span></div>
+  </div>
+  <div class="url">dinkup.onrender.com</div>
+</div>
+</body></html>

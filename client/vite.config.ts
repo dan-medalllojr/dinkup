@@ -34,7 +34,8 @@ export default defineConfig({
         // ...except the map engine (MapLibre, ~280 KB gzipped): don't make every
         // install download it up front on mobile data. It's cached the first
         // time someone opens a map instead (runtime rule below).
-        globIgnores: ['**/CourtMap-*.{js,css}', '**/maplibre-gl-worker-*.js'],
+        // The link-preview image is only for Messenger/Facebook, never the app.
+        globIgnores: ['**/CourtMap-*.{js,css}', '**/maplibre-gl-worker-*.js', 'og-image.png'],
         // Client-side routes fall back to the cached index.html, except the
         // API, which must always hit the network.
         navigateFallback: '/index.html',
