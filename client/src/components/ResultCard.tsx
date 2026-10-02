@@ -30,7 +30,10 @@ export function ResultCard({ result, onChange }: { result: MatchResult; onChange
   const canAnswer = iLost && result.status === 'pending';
 
   async function act(action: 'confirm' | 'dispute') {
-    if (action === 'dispute' && !window.confirm("Dispute this result? It won't count for anyone, and it can't be reported again.")) return;
+    const warning = result.correction
+      ? "Dispute this correction? It's final: the game won't count for anyone."
+      : "Dispute this result? It won't count unless someone reports a correction within 24 hours (one correction only).";
+    if (action === 'dispute' && !window.confirm(warning)) return;
     setBusy(action);
     setError('');
     try {
@@ -53,6 +56,9 @@ export function ResultCard({ result, onChange }: { result: MatchResult; onChange
         <strong>{names(result.winners)}</strong> beat {names(result.losers)}
       </p>
       <p className="result-score">{result.score}</p>
+      {result.correction ? (
+        <p className="muted small">Corrected result. The first report ({result.correction.originalScore}) was disputed.</p>
+      ) : null}
 
       {result.status === 'confirmed' ? (
         <ul className="result-points">
@@ -74,7 +80,15 @@ export function ResultCard({ result, onChange }: { result: MatchResult; onChange
           {deadline.format(new Date(result.confirmBy))}, or it expires and counts for no one.
         </p>
       ) : null}
-      {result.status === 'disputed' ? <p className="muted small">The losing side disputed this result, so it doesn't count.</p> : null}
+      {result.status === 'disputed' ? (
+        <p className="muted small">
+          {result.correctableUntil
+            ? `The losing side disputed this result. Either side can report a correction by ${deadline.format(new Date(result.correctableUntil))}.`
+            : result.correction
+              ? 'The correction was disputed too, so this game doesn\'t count.'
+              : "The losing side disputed this result, so it doesn't count."}
+        </p>
+      ) : null}
 
       {canAnswer ? (
         <div className="result-actions">

@@ -41,6 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    // Stop this phone getting the player's notifications once they log out.
+    await import('./push.ts').then((m) => m.turnOffPush()).catch(() => {});
     await api('POST', '/auth/logout');
     setUser(null);
   }, []);

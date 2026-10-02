@@ -182,6 +182,9 @@ export function GamePage() {
       </section>
 
       {game.result ? <ResultCard result={game.result} onChange={setResult} /> : null}
+      {game.result?.correctableUntil && isPlayer && Date.now() < new Date(game.result.correctableUntil).getTime() ? (
+        <ReportResult key={`correct-${game.result.id}`} game={game} meId={user!.id} onReported={setResult} correcting={game.result} />
+      ) : null}
       {!game.result && isPlayer && reportOpen && game.players.length === game.capacity ? (
         <ReportResult game={game} meId={user!.id} onReported={setResult} />
       ) : null}

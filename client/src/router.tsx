@@ -8,6 +8,7 @@ import { HomePage } from './pages/HomePage.tsx';
 import { InstallPage } from './pages/InstallPage.tsx';
 import { LoginPage } from './pages/LoginPage.tsx';
 import { NotFoundPage } from './pages/NotFoundPage.tsx';
+import { NotificationsPage } from './pages/NotificationsPage.tsx';
 import { PlayerPage } from './pages/PlayerPage.tsx';
 import { ProfilePage } from './pages/ProfilePage.tsx';
 import { RegisterPage } from './pages/RegisterPage.tsx';
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
         element: <RequireAuth />,
         children: [
           { path: 'profile', element: <ProfilePage /> },
+          { path: 'notifications', element: <NotificationsPage /> },
           {
             path: 'games/new',
             // Shares the Leaflet chunk with /courts.

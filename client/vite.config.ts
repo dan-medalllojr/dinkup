@@ -62,6 +62,8 @@ export default defineConfig({
           },
         ],
         cleanupOutdatedCaches: true,
+        // Phone notifications: the push and notification-tap handlers.
+        importScripts: ['push-sw.js'],
       },
       devOptions: { enabled: false },
     }),

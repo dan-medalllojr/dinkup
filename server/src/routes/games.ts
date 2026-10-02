@@ -17,6 +17,7 @@ import { findScheduleClash, gameInclude, lockGame, lockUser, toGame } from '../l
 import { HttpError } from '../lib/http-error.ts';
 import { expireStaleResults, resultInclude, toResult } from '../lib/results.ts';
 import { fromDbLevel, toDbLevel } from '../lib/users.ts';
+import { notify, when } from '../lib/notify.ts';
 import { requireAuth } from '../middleware/auth.ts';
 
 export const gamesRouter = Router();
@@ -161,6 +162,12 @@ gamesRouter.post('/:id/cancel', requireAuth, async (req, res) => {
     return tx.game.update({ where: { id: existing.id }, data: { status: 'cancelled' }, include: gameInclude });
   });
 
+  await notify(game.players.map((p) => p.userId), {
+    type: 'game_cancelled',
+    gameId: game.id,
+    actorId: game.hostId,
+    text: `${game.host.name} cancelled the game at ${game.court.name} on ${when(game.startsAt)}.`,
+  });
   res.json({ game: toGame(game) });
 });
 
@@ -198,6 +205,14 @@ gamesRouter.post('/:id/join', requireAuth, async (req, res) => {
     return tx.game.findUniqueOrThrow({ where: { id: existing.id }, include: gameInclude });
   });
 
+  const joiner = game.players.find((p) => p.userId === userId)!.user;
+  const left = game.capacity - game.players.length;
+  await notify([game.hostId], {
+    type: 'player_joined',
+    gameId: game.id,
+    actorId: userId,
+    text: `${joiner.name} joined your game at ${game.court.name} on ${when(game.startsAt)}. ${left === 0 ? "It's full." : `${left} spot${left === 1 ? '' : 's'} left.`}`,
+  });
   res.json({ game: toGame(game) });
 });
 
@@ -219,5 +234,12 @@ gamesRouter.post('/:id/leave', requireAuth, async (req, res) => {
     return tx.game.findUniqueOrThrow({ where: { id: existing.id }, include: gameInclude });
   });
 
+  const leaver = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true } });
+  await notify([game.hostId], {
+    type: 'player_left',
+    gameId: game.id,
+    actorId: userId,
+    text: `${leaver.name} left your game at ${game.court.name} on ${when(game.startsAt)}. A spot is open again.`,
+  });
   res.json({ game: toGame(game) });
 });

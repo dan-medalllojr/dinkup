@@ -71,6 +71,26 @@ a { color: var(--green); }
 .topbar a:not(.button):not(.brand) { color: var(--text); text-decoration: none; font-weight: 500; }
 .topbar a.active:not(.button):not(.brand) { color: var(--green); }
 .topnav-profile { display: flex; }
+.bell { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: var(--text); }
+.bell:hover, .bell.active { background: var(--surface); }
+.bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #d64545;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+.notification-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.notification-list .notification { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.85rem 1rem; }
+.notification-list .is-unread .notification { border-color: var(--green); box-shadow: inset 4px 0 0 var(--green); }
 
 /* Phones: bottom tab bar, thumb-reachable. */
 .tabbar {

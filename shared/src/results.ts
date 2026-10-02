@@ -6,6 +6,7 @@ import type { PlayerSummary } from './games';
 export const POINTS_TO_LEVEL_UP = 5;
 export const REPORT_WINDOW_HOURS = 24; // after the game ends
 export const CONFIRM_WINDOW_HOURS = 48; // after the report
+export const CORRECTION_WINDOW_HOURS = 24; // after a dispute, one correction
 export const SAME_OPPONENT_CAP = 2; // wins vs one opponent that can earn points…
 export const SAME_OPPONENT_WINDOW_DAYS = 30; // …in this many days
 export const MIN_OPPONENT_ACCOUNT_DAYS = 7;
@@ -68,5 +69,9 @@ export type MatchResult = {
   /** Pending results expire after this. */
   confirmBy: string;
   resolvedAt: string | null;
+  /** Set once a disputed result was corrected (only one correction is allowed). */
+  correction: { originalScore: string; correctedAt: string } | null;
+  /** While disputed and not yet corrected: the deadline for reporting a correction. */
+  correctableUntil: string | null;
   game: { id: string; startsAt: string; courtName: string; format: 'singles' | 'doubles' };
 };

@@ -45,6 +45,8 @@ model User {
   reported    MatchResult[]       @relation("ReportedResults")
   confirmed   MatchResult[]       @relation("ConfirmedResults")
   results     MatchResultPlayer[]
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -130,6 +132,7 @@ model Game {
   players  GamePlayer[]
   comments GameComment[]
   result   MatchResult?
+  notifications Notification[]
 
   @@index([startsAt])
   @@index([hostId])
@@ -193,6 +196,10 @@ model MatchResult {
   createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   // When it was confirmed, disputed, or expired.
   resolvedAt    DateTime?    @map("resolved_at") @db.Timestamptz(6)
+  // A disputed result can be corrected once (see routes/results.ts). The row
+  // is reused: these record what was disputed and when it was corrected.
+  correctedAt   DateTime?    @map("corrected_at") @db.Timestamptz(6)
+  originalScore String?      @map("original_score") @db.VarChar(60)
 
   game        Game                @relation(fields: [gameId], references: [id], onDelete: Cascade)
   reportedBy  User                @relation("ReportedResults", fields: [reportedById], references: [id], onDelete: Cascade)
@@ -220,4 +227,53 @@ model MatchResultPlayer {
   // "Wins against this opponent in the last 30 days" joins through here.
   @@index([userId, side])
   @@map("match_result_players")
+}
+
+enum NotificationType {
+  player_joined
+  player_left
+  game_cancelled
+  comment
+  result_reported
+  result_corrected
+  result_confirmed
+  result_disputed
+
+  @@map("notification_type")
+}
+
+// One row per person to notify. The text is written when it happens, so the
+// inbox shows what was true then; tapping it opens the game.
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  text      String           @db.VarChar(300)
+  gameId    String?          @map("game_id") @db.Uuid
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  readAt    DateTime?        @map("read_at") @db.Timestamptz(6)
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game Game? @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  // The inbox: newest first for one player.
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+// A browser/phone that agreed to receive push notifications (Web Push).
+// The endpoint is unique per browser install; if a push service says it's
+// gone (404/410), the row is deleted.
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }

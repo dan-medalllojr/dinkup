@@ -7,6 +7,7 @@ import { commentsRouter } from './routes/comments.ts';
 import { courtsRouter } from './routes/courts.ts';
 import { gamesRouter } from './routes/games.ts';
 import { geoRouter } from './routes/geo.ts';
+import { notificationsRouter } from './routes/notifications.ts';
 import { resultsRouter } from './routes/results.ts';
 import { usersRouter } from './routes/users.ts';
 import { sessionMiddleware } from './session.ts';
@@ -34,6 +35,7 @@ export function createApp() {
   // Paths like /games/:id/result and /users/:id/results: mounted after the
   // games and users routers, which don't match them and pass them on.
   api.use(resultsRouter);
+  api.use(notificationsRouter);
   api.use(notFound);
   app.use('/api', api);
 
