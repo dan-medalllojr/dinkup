@@ -1,7 +1,8 @@
 import request from 'supertest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '../src/db.ts';
-import { setPushSender } from '../src/lib/notify.ts';
+import { configurePush, setPushSender } from '../src/lib/notify.ts';
+import webpush from 'web-push';
 import { app, registeredAgent, useCleanDatabase } from './helpers.ts';
 
 useCleanDatabase();
@@ -130,6 +131,19 @@ describe('the inbox', () => {
 
     expect((await inbox(p)).notifications).toEqual([]);
     await request(app).get('/api/notifications').expect(401);
+  });
+});
+
+describe('push keys', () => {
+  it('turns push off instead of crashing on bad keys', () => {
+    const good = webpush.generateVAPIDKeys();
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(configurePush(good.privateKey, good.publicKey, 'https://dinkup.onrender.com')).toBe(false); // swapped
+    expect(configurePush('not-a-key', good.privateKey, 'https://dinkup.onrender.com')).toBe(false);
+    expect(errors).toHaveBeenCalledWith(expect.stringContaining('Push is OFF'));
+    errors.mockRestore();
+    expect(configurePush(undefined, undefined, 'https://dinkup.onrender.com')).toBe(false);
+    expect(configurePush(good.publicKey, good.privateKey, 'https://dinkup.onrender.com')).toBe(true);
   });
 });
 
