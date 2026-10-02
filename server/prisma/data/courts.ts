@@ -256,9 +256,20 @@ export const COURTS: CourtSeed[] = [
     source: 'Google place 0x33a97900244703f9:0x3bfa1ef222543549',
   },
 
-  // --- Needs a pin ------------------------------------------------------
-  // Directories pin "Pino Pickleball Courts" at 10.377108, 123.918433, but
-  // Google now names that place "ML Lifestyle Park - Sports & Food Park".
-  // Confirm the courts are still there (and under what name) before pinning.
-  { slug: 'pino-pickleball-court', name: 'Pino Pickleball Court', address: 'San Jose Road, Talamban', city: 'Cebu City', lat: null, lng: null, setting: 'outdoor', source: 'sugbo.ph' },
+  {
+    // Formerly "Pino Pickleball Courts" (Pino Talamban). Pinned 2026-10-02:
+    // the operator's booking site lists Pickleball Courts 1–9 under ML
+    // Lifestyle Park, and Reclub meets for "Pino Pickleball Courts" link this
+    // exact point and the same Google place.
+    slug: 'ml-lifestyle-park',
+    name: 'ML Lifestyle Park (Pino Pickleball)',
+    address: 'San Jose Road, San Jose, Talamban',
+    city: 'Cebu City',
+    lat: 10.376937,
+    lng: 123.91863,
+    courtCount: 9,
+    setting: 'outdoor',
+    notes: 'Also basketball and futsal. Book at webpos.lavielifestyle.ph',
+    source: 'Google place 0x33a9a3005f223b37:0x81add94536149007; same point on reclub.co Pino meets; operator site webpos.lavielifestyle.ph',
+  },
 ];
