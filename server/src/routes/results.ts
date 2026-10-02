@@ -13,6 +13,7 @@ import { prisma } from '../db.ts';
 import { Prisma } from '../generated/prisma/client.ts';
 import { HttpError } from '../lib/http-error.ts';
 import { addPoint, expireStaleResults, pointsFor, resultInclude, toResult } from '../lib/results.ts';
+import { notify, when } from '../lib/notify.ts';
 import { toDbLevel } from '../lib/users.ts';
 import { requireAuth } from '../middleware/auth.ts';
 
@@ -42,6 +43,9 @@ function checkSides(game: GameWithPlayers, input: ReportResultInput, reporterId:
   }
   if (!input.winnerIds.includes(reporterId)) throw new HttpError(403, 'Only a player on the winning side can report the result');
 }
+
+const ids = (ps: { id: string }[]) => ps.map((p) => p.id);
+const names = (ps: { name: string }[]) => ps.map((p) => p.name).join(' & ');
 
 const sideRows = (input: ReportResultInput) => [
   ...input.winnerIds.map((id) => ({ userId: id, side: 'winner' as const })),
@@ -77,7 +81,14 @@ resultsRouter.post('/games/:id/result', requireAuth, async (req, res) => {
       },
       include: resultInclude,
     });
-    res.status(201).json({ result: toResult(result) });
+    const r = toResult(result);
+    await notify(ids(r.losers), {
+      type: 'result_reported',
+      gameId,
+      actorId: userId,
+      text: `${r.reportedBy.name} reported a win over you at ${r.game.courtName} (${r.score}). Confirm or dispute it by ${when(new Date(r.confirmBy))}.`,
+    });
+    res.status(201).json({ result: r });
   } catch (err) {
     // Unique game_id: one result per game, even if two winners report at once.
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -130,7 +141,15 @@ resultsRouter.post('/results/:id/confirm', requireAuth, async (req, res) => {
     return tx.matchResult.findUniqueOrThrow({ where: { id: r.id }, include: resultInclude });
   });
 
-  res.json({ result: toResult(result) });
+  const confirmed = toResult(result);
+  const confirmer = confirmed.losers.find((p) => p.id === userId)!;
+  await notify(ids(confirmed.winners), {
+    type: 'result_confirmed',
+    gameId: confirmed.gameId,
+    actorId: userId,
+    text: `${confirmer.name} confirmed your win at ${confirmed.game.courtName} (${confirmed.score}). See your points on the game page.`,
+  });
+  res.json({ result: confirmed });
 });
 
 resultsRouter.post('/results/:id/dispute', requireAuth, async (req, res) => {
@@ -147,7 +166,17 @@ resultsRouter.post('/results/:id/dispute', requireAuth, async (req, res) => {
     await tx.matchResult.update({ where: { id: r.id }, data: { status: 'disputed', resolvedAt: new Date() } });
     return tx.matchResult.findUniqueOrThrow({ where: { id: r.id }, include: resultInclude });
   });
-  res.json({ result: toResult(result) });
+  const disputed = toResult(result);
+  const disputer = disputed.losers.find((p) => p.id === userId)!;
+  await notify(ids(disputed.winners), {
+    type: 'result_disputed',
+    gameId: disputed.gameId,
+    actorId: userId,
+    text: disputed.correctableUntil
+      ? `${disputer.name} disputed your win at ${disputed.game.courtName}. Either side can report a correction by ${when(new Date(disputed.correctableUntil))}.`
+      : `${disputer.name} disputed the corrected result at ${disputed.game.courtName}, so the game won't count.`,
+  });
+  res.json({ result: disputed });
 });
 
 // After a dispute, the players get one chance to agree: within 24 hours, a
@@ -190,7 +219,14 @@ resultsRouter.post('/results/:id/correct', requireAuth, async (req, res) => {
     });
     return tx.matchResult.findUniqueOrThrow({ where: { id: r.id }, include: resultInclude });
   });
-  res.json({ result: toResult(result) });
+  const corrected = toResult(result);
+  await notify(ids(corrected.losers), {
+    type: 'result_corrected',
+    gameId: corrected.gameId,
+    actorId: userId,
+    text: `${corrected.reportedBy.name} reported a correction for the game at ${corrected.game.courtName}: ${names(corrected.winners)} beat ${names(corrected.losers)}, ${corrected.score}. Confirm or dispute it by ${when(new Date(corrected.confirmBy))}.`,
+  });
+  res.json({ result: corrected });
 });
 
 // Results waiting for *my* confirmation (I'm on the losing side).

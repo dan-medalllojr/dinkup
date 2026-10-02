@@ -12,7 +12,8 @@ if (!new URL(testDatabaseUrl).pathname.endsWith('_test')) {
 
 export default defineConfig({
   test: {
-    env: { NODE_ENV: 'test', DATABASE_URL: testDatabaseUrl, DIRECT_URL: testDatabaseUrl },
+    // Push off in tests (server/.env has dev keys): tests swap in a fake sender.
+    env: { NODE_ENV: 'test', DATABASE_URL: testDatabaseUrl, DIRECT_URL: testDatabaseUrl, VAPID_PUBLIC_KEY: '', VAPID_PRIVATE_KEY: '' },
     globalSetup: ['test/global-setup.ts'],
     // Test files share one database, so run them one at a time.
     fileParallelism: false,

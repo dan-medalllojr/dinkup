@@ -101,6 +101,8 @@ The app is deployed to Render with the Blueprint in [`render.yaml`](render.yaml)
 
 Set `DATABASE_URL` (pooled) and `DIRECT_URL` (direct) for the `production` branch in the Render dashboard. Render generates `SESSION_SECRET`.
 
+**Phone notifications (Web Push)** need `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Generate a pair with `npx web-push generate-vapid-keys` (use a different pair for production than for development) and add both in the Render dashboard. Without them, push is off and the in-app notification inbox still works. See [`docs/log/change-14-notifications.md`](docs/log/change-14-notifications.md).
+
 Free-tier note: the Render service and the Neon database both sleep when idle, so the first visit after a quiet spell takes a little longer.
 
 ## Demo mode

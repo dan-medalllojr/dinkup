@@ -6,6 +6,7 @@ import { prisma } from '../db.ts';
 import type { GameComment as DbComment, User } from '../generated/prisma/client.ts';
 import { HttpError } from '../lib/http-error.ts';
 import { fromDbLevel } from '../lib/users.ts';
+import { notify } from '../lib/notify.ts';
 import { requireAuth } from '../middleware/auth.ts';
 
 // Mounted at /api/games/:id/comments.
@@ -61,11 +62,18 @@ commentsRouter.post('/', requireAuth, commentLimiter, async (req, res) => {
   const { body } = createCommentSchema.parse(req.body);
   const userId = req.session.userId!;
 
-  const game = await prisma.game.findUnique({ where: { id: gameId }, include: { players: { where: { userId } } } });
+  const game = await prisma.game.findUnique({ where: { id: gameId }, include: { players: true, court: true } });
   if (!game) throw new HttpError(404, 'Game not found');
-  if (game.players.length === 0) throw new HttpError(403, 'Only players in this game can comment');
+  if (!game.players.some((p) => p.userId === userId)) throw new HttpError(403, 'Only players in this game can comment');
 
   const comment = await prisma.gameComment.create({ data: { gameId, userId, body }, include: { user: true } });
+  const excerpt = body.length > 80 ? `${body.slice(0, 79)}…` : body;
+  await notify(game.players.map((p) => p.userId), {
+    type: 'comment',
+    gameId,
+    actorId: userId,
+    text: `${comment.user.name} on the game at ${game.court.name}: “${excerpt}”`,
+  });
   res.status(201).json({ comment: toComment(comment) });
 });
 

@@ -32,3 +32,8 @@ services:
         sync: false
       - key: DIRECT_URL # direct connection, used by migrations
         sync: false
+      # Web Push (phone notifications). Without them, only the in-app inbox works.
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
