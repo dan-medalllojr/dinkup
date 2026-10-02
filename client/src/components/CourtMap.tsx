@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import type { Map as MLMap, Marker } from 'maplibre-gl';
-import { CEBU_CENTER, distanceKm, type Court, type LatLng } from '@dinkup/shared';
+import { CEBU_CENTER, distanceKm, groupNearby, type Court, type LatLng } from '@dinkup/shared';
 import { useColorScheme } from '../lib/useColorScheme.ts';
 import { PlaceSearch, type PickedPlace } from './map/PlaceSearch.tsx';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -43,6 +43,18 @@ type Props = {
   /** Pixels to keep free at the bottom (e.g. under a bottom sheet). */
   sheetOffset?: number;
 };
+
+// Pins closer than this on screen merge into one "N courts" bubble. From this
+// zoom on they never merge, so courts at the same spot stay reachable.
+const GROUP_RADIUS_PX = 44;
+const NO_GROUPS_FROM_ZOOM = 16;
+
+function groupElement() {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'map-marker map-group';
+  return el;
+}
 
 function pinElement(label: string) {
   // MapLibre positions the outer element with a transform, so styling (and
@@ -89,8 +101,9 @@ export function CourtMap({
 
   // Event handlers read the latest props through a ref, so the map and its
   // markers don't have to be rebuilt every render.
-  const latest = useRef({ onSelect, onDraftMove, addMode, courts });
-  latest.current = { onSelect, onDraftMove, addMode, courts };
+  const latest = useRef({ onSelect, onDraftMove, addMode, courts, selectedId, countFor });
+  latest.current = { onSelect, onDraftMove, addMode, courts, selectedId, countFor };
+  const groupMarkers = useRef(new Map<string, { marker: Marker; el: HTMLButtonElement }>());
 
   // Create the map once.
   useEffect(() => {
@@ -134,6 +147,7 @@ export function CourtMap({
       m.remove();
       mapRef.current = null;
       markers.current.clear();
+      groupMarkers.current.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- style switches are handled below
   }, []);
@@ -173,7 +187,67 @@ export function CourtMap({
         markers.current.delete(id);
       }
     }
+    regroup();
   }, [map, courts, selectedId, countFor, addMode]);
+
+  // Overlapping pins merge into a bubble showing how many courts (and, in
+  // its badge, how many games) it holds. Tapping it zooms in until they
+  // separate. The selected court always keeps its own pin.
+  function regroup() {
+    if (!map) return;
+    const { courts: all, selectedId: selected, countFor: count } = latest.current;
+    const grouping = map.getZoom() < NO_GROUPS_FROM_ZOOM;
+    const points = all
+      .filter((c) => c.id !== selected)
+      .map((c) => ({ item: c, ...map.project([c.lng, c.lat]) }));
+    const groups = grouping ? groupNearby(points, GROUP_RADIUS_PX).filter((g) => g.length > 1) : [];
+
+    const hidden = new Set(groups.flat().map((c) => c.id));
+    for (const [id, entry] of markers.current) entry.el.style.display = hidden.has(id) ? 'none' : '';
+
+    const seen = new Set<string>();
+    for (const group of groups) {
+      const key = group.map((c) => c.id).sort().join(',');
+      seen.add(key);
+      const lng = group.reduce((sum, c) => sum + c.lng, 0) / group.length;
+      const lat = group.reduce((sum, c) => sum + c.lat, 0) / group.length;
+      let entry = groupMarkers.current.get(key);
+      if (!entry) {
+        const el = groupElement();
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const bounds = new maplibregl.LngLatBounds();
+          for (const c of group) bounds.extend([c.lng, c.lat]);
+          map.fitBounds(bounds, { padding: 72, maxZoom: NO_GROUPS_FROM_ZOOM, duration: 600 });
+        });
+        entry = { el, marker: new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map) };
+        groupMarkers.current.set(key, entry);
+      }
+      const games = group.reduce((sum, c) => sum + count(c), 0);
+      entry.el.setAttribute('aria-label', `${group.length} courts here: ${group.map((c) => c.name).join(', ')}. Zoom in`);
+      entry.el.innerHTML =
+        `<span class="map-group-bubble">${group.length}</span>` +
+        (games > 0 ? `<span class="map-pin-badge">${games > 9 ? '9+' : games}</span>` : '');
+    }
+    for (const [key, entry] of groupMarkers.current) {
+      if (!seen.has(key)) {
+        entry.marker.remove();
+        groupMarkers.current.delete(key);
+      }
+    }
+  }
+  const regroupRef = useRef(regroup);
+  regroupRef.current = regroup;
+  useEffect(() => {
+    if (!map) return;
+    const onMove = () => regroupRef.current();
+    map.on('moveend', onMove);
+    map.on('resize', onMove);
+    return () => {
+      map.off('moveend', onMove);
+      map.off('resize', onMove);
+    };
+  }, [map]);
 
   // First view: jump to a preselected court, otherwise fit every court (or,
   // when we know where the player is, the courts around them; see below).
