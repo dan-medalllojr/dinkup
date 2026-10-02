@@ -238,6 +238,77 @@ describe('expiry and disputes', () => {
   });
 });
 
+const dispute = (by: Player, resultId: string) => by.agent.post(`/api/results/${resultId}/dispute`).set(...JSON_HEADER);
+const correct = (by: Player, resultId: string, winners: Player[], losers: Player[], score: [number, number][] = [[11, 8], [11, 6]]) =>
+  by.agent.post(`/api/results/${resultId}/correct`).send({ winnerIds: winners.map((p) => p.id), loserIds: losers.map((p) => p.id), score });
+
+describe('correcting a disputed result', () => {
+  it('lets the real winners report a correction, which the other side confirms for points', async () => {
+    const [a, b] = [await player(), await player()];
+    const game = await finishedGame([a, b]);
+    // a claims a win; b disputes; b actually won and reports that.
+    const r = await report(a, game.id, [a], [b]).expect(201);
+    const d = await dispute(b, r.body.result.id).expect(200);
+    expect(d.body.result.correctableUntil).toBeTruthy();
+    const c = await correct(b, r.body.result.id, [b], [a]).expect(200);
+    expect(c.body.result).toMatchObject({ status: 'pending', score: '11-8, 11-6', correction: { originalScore: '11-7, 11-9' }, correctableUntil: null });
+    expect(c.body.result.winners.map((w: { id: string }) => w.id)).toEqual([b.id]);
+    expect(c.body.result.reportedBy.id).toBe(b.id);
+
+    // Now a is the loser: the reporter (b) can't confirm, a can.
+    await confirm(b, r.body.result.id).expect(403);
+    const done = await confirm(a, r.body.result.id).expect(200);
+    expect(done.body.result.status).toBe('confirmed');
+    expect((await user(b)).skillPoints).toBe(1);
+    expect((await user(a)).skillPoints).toBe(0);
+  });
+
+  it('allows only one correction: disputing it again is final', async () => {
+    const [a, b] = [await player(), await player()];
+    const game = await finishedGame([a, b]);
+    const r = await report(a, game.id, [a], [b]).expect(201);
+    await dispute(b, r.body.result.id).expect(200);
+    // The original reporter re-asserts the same win (allowed once)…
+    await correct(a, r.body.result.id, [a], [b], [[11, 7], [11, 9]]).expect(200);
+    // …b disputes again, and that's the end of it.
+    const d2 = await dispute(b, r.body.result.id).expect(200);
+    expect(d2.body.result.correctableUntil).toBeNull();
+    const again = await correct(b, r.body.result.id, [b], [a]).expect(409);
+    expect(again.body.error).toMatch(/already corrected once/);
+    expect((await user(a)).skillPoints).toBe(0);
+  });
+
+  it('only for disputed results, within 24 hours, by a player on the corrected winning side', async () => {
+    const [a, b, outsider] = [await player(), await player(), await player()];
+    const game = await finishedGame([a, b]);
+    const r = await report(a, game.id, [a], [b]).expect(201);
+    await correct(a, r.body.result.id, [a], [b]).expect(409); // still pending, not disputed
+    await dispute(b, r.body.result.id).expect(200);
+
+    await correct(outsider, r.body.result.id, [outsider], [b]).expect(400); // not this game's players
+    await correct(a, r.body.result.id, [b], [a]).expect(403); // a can't report b's win
+    await correct(b, r.body.result.id, [b], [a], [[5, 11]]).expect(400); // bad score
+
+    await prisma.matchResult.update({ where: { id: r.body.result.id }, data: { resolvedAt: new Date(Date.now() - 25 * HOUR) } });
+    const late = await correct(b, r.body.result.id, [b], [a]).expect(409);
+    expect(late.body.error).toMatch(/within 24 hours/);
+  });
+
+  it('works for doubles, including a different partner split', async () => {
+    const [a, b, c, d] = [await player(), await player(), await player(), await player()];
+    const game = await finishedGame([a, b, c, d]);
+    const r = await report(a, game.id, [a, b], [c, d]).expect(201);
+    await dispute(c, r.body.result.id).expect(200);
+    // The teams were actually a+c vs b+d.
+    const fixed = await correct(c, r.body.result.id, [c, a], [b, d]).expect(200);
+    expect(fixed.body.result.losers.map((p: { id: string }) => p.id).sort()).toEqual([b.id, d.id].sort());
+    await confirm(a, r.body.result.id).expect(403); // a is a winner now
+    await confirm(d, r.body.result.id).expect(200);
+    expect((await user(a)).skillPoints).toBe(1);
+    expect((await user(c)).skillPoints).toBe(1);
+  });
+});
+
 describe('concurrency', () => {
   it('counts a doubles result once when both losers confirm at the same moment', async () => {
     const [a, b, c, d] = [await player(), await player(), await player(), await player()];

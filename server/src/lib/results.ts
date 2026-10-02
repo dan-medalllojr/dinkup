@@ -1,5 +1,6 @@
 import {
   CONFIRM_WINDOW_HOURS,
+  CORRECTION_WINDOW_HOURS,
   formatScore,
   MIN_OPPONENT_ACCOUNT_DAYS,
   MIN_OPPONENT_CONFIRMED_RESULTS,
@@ -47,6 +48,11 @@ export function toResult(r: ResultRow): MatchResult {
     createdAt: r.createdAt.toISOString(),
     confirmBy: new Date(r.createdAt.getTime() + CONFIRM_WINDOW_HOURS * HOUR).toISOString(),
     resolvedAt: r.resolvedAt?.toISOString() ?? null,
+    correction: r.correctedAt ? { originalScore: r.originalScore ?? '', correctedAt: r.correctedAt.toISOString() } : null,
+    correctableUntil:
+      r.status === 'disputed' && !r.correctedAt && r.resolvedAt
+        ? new Date(r.resolvedAt.getTime() + CORRECTION_WINDOW_HOURS * HOUR).toISOString()
+        : null,
     game: { id: r.game.id, startsAt: r.game.startsAt.toISOString(), courtName: r.game.court.name, format: r.game.format },
   };
 }

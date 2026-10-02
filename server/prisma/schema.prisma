@@ -193,6 +193,10 @@ model MatchResult {
   createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   // When it was confirmed, disputed, or expired.
   resolvedAt    DateTime?    @map("resolved_at") @db.Timestamptz(6)
+  // A disputed result can be corrected once (see routes/results.ts). The row
+  // is reused: these record what was disputed and when it was corrected.
+  correctedAt   DateTime?    @map("corrected_at") @db.Timestamptz(6)
+  originalScore String?      @map("original_score") @db.VarChar(60)
 
   game        Game                @relation(fields: [gameId], references: [id], onDelete: Cascade)
   reportedBy  User                @relation("ReportedResults", fields: [reportedById], references: [id], onDelete: Cascade)

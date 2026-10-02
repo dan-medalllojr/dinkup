@@ -1,15 +1,23 @@
 import { useState, type FormEvent } from 'react';
-import { reportResultSchema, type Game, type MatchResult } from '@dinkup/shared';
+import { reportResultSchema, TIMEZONE, type Game, type MatchResult } from '@dinkup/shared';
 import { z } from 'zod';
 import { api, ApiError } from '../lib/api.ts';
 
-type Props = { game: Game; meId: string; onReported: (r: MatchResult) => void };
+type Props = {
+  game: Game;
+  meId: string;
+  onReported: (r: MatchResult) => void;
+  /** A disputed result to correct (the one allowed correction), instead of a first report. */
+  correcting?: MatchResult;
+};
+
+const deadline = new Intl.DateTimeFormat('en-PH', { timeZone: TIMEZONE, weekday: 'short', hour: 'numeric', minute: '2-digit' });
 
 /**
  * Only the winning side reports: the form is "Report your win". In doubles,
  * the reporter picks their partner and the other two are the losers.
  */
-export function ReportResult({ game, meId, onReported }: Props) {
+export function ReportResult({ game, meId, onReported, correcting }: Props) {
   const others = game.players.filter((p) => p.id !== meId);
   const [open, setOpen] = useState(false);
   const [partnerId, setPartnerId] = useState('');
@@ -37,13 +45,29 @@ export function ReportResult({ game, meId, onReported }: Props) {
     setSaving(true);
     setError('');
     try {
-      const res = await api<{ result: MatchResult }>('POST', `/games/${game.id}/result`, parsed.data);
+      const path = correcting ? `/results/${correcting.id}/correct` : `/games/${game.id}/result`;
+      const res = await api<{ result: MatchResult }>('POST', path, parsed.data);
       onReported(res.result);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong');
     } finally {
       setSaving(false);
     }
+  }
+
+  if (!open && correcting) {
+    return (
+      <section className="card stack-tight">
+        <h2>Was the result wrong?</h2>
+        <p className="muted small">
+          If your side won, report the correct result by {deadline.format(new Date(correcting.correctableUntil!))}. The other side confirms
+          it. There's only one correction: if it's disputed again, this game won't count.
+        </p>
+        <button className="button button-block" onClick={() => setOpen(true)}>
+          We won: report the correct result
+        </button>
+      </section>
+    );
   }
 
   if (!open) {
@@ -60,7 +84,7 @@ export function ReportResult({ game, meId, onReported }: Props) {
 
   return (
     <form className="card stack-tight" onSubmit={submit} noValidate aria-labelledby="report-title">
-      <h2 id="report-title">Report your win</h2>
+      <h2 id="report-title">{correcting ? 'Report the correct result' : 'Report your win'}</h2>
       {game.format === 'doubles' ? (
         <fieldset className="field">
           <legend>Your partner</legend>
@@ -123,7 +147,7 @@ export function ReportResult({ game, meId, onReported }: Props) {
           Cancel
         </button>
         <button className="button" disabled={saving}>
-          {saving ? 'Reporting…' : 'Report win'}
+          {saving ? 'Reporting…' : correcting ? 'Report correction' : 'Report win'}
         </button>
       </div>
     </form>
