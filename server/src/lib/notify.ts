@@ -8,8 +8,23 @@ import type { NotificationType } from '../generated/prisma/client.ts';
 // subscribed phones/browsers. Called after the action has succeeded, and never
 // allowed to break it: a failed notification is logged, not thrown.
 
-export const pushEnabled = Boolean(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY);
-if (pushEnabled) webpush.setVapidDetails(env.VAPID_SUBJECT, env.VAPID_PUBLIC_KEY!, env.VAPID_PRIVATE_KEY!);
+/**
+ * Turns push on if the keys are usable. Bad keys (swapped, truncated) must
+ * never stop the server from starting: that once kept a deploy from going
+ * live. They're logged, and push stays off; the in-app inbox still works.
+ */
+export function configurePush(publicKey: string | undefined, privateKey: string | undefined, subject: string): boolean {
+  if (!publicKey || !privateKey) return false;
+  try {
+    webpush.setVapidDetails(subject, publicKey, privateKey);
+    return true;
+  } catch (err) {
+    console.error(`Push is OFF: the VAPID keys are invalid (${(err as Error).message}). Check VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY.`);
+    return false;
+  }
+}
+
+export const pushEnabled = configurePush(env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY, env.VAPID_SUBJECT);
 
 export type PushPayload = { title: string; body: string; url: string; tag: string };
 type Subscription = { endpoint: string; keys: { p256dh: string; auth: string } };

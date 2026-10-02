@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const cleanKey = (v: string | undefined) => v?.trim().replace(/^['"]|['"]$/g, '').trim() || undefined;
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
@@ -10,8 +12,9 @@ const envSchema = z.object({
   // Web Push (phone notifications). Without both keys, push is off and the
   // in-app inbox still works. Generate with: npx web-push generate-vapid-keys
   // A blank value counts as unset (the tests blank them to keep push off).
-  VAPID_PUBLIC_KEY: z.string().optional().transform((v) => v || undefined),
-  VAPID_PRIVATE_KEY: z.string().optional().transform((v) => v || undefined),
+  // Spaces and quotes from pasting into a dashboard are stripped.
+  VAPID_PUBLIC_KEY: z.string().optional().transform(cleanKey),
+  VAPID_PRIVATE_KEY: z.string().optional().transform(cleanKey),
   // Who push services can contact about this sender.
   VAPID_SUBJECT: z.string().default('https://dinkup.onrender.com'),
 });
