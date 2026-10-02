@@ -250,6 +250,26 @@ form { display: flex; flex-direction: column; gap: 0.9rem; margin: 1rem 0; }
 .map-pin.is-draft::before { background: #e8833a; }
 .map-pin.is-draft { animation: pin-bounce 1.2s ease-in-out infinite; }
 @keyframes pin-bounce { 50% { transform: translateY(-4px); } }
+/* Several courts close together: a numbered bubble (tap to zoom in). */
+.map-group { position: relative; padding: 0; border: 0; background: none; cursor: pointer; }
+.map-group-bubble {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 4px rgb(31 122 77 / 0.3), 0 2px 4px rgb(0 0 0 / 0.35);
+}
+.map-group .map-pin-badge { right: -6px; top: -6px; }
+.map-group:focus-visible { outline: none; }
+.map-group:focus-visible .map-group-bubble { outline: 3px solid var(--lime); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .map-pin.is-draft { animation: none; } .map-pin { transition: none; } }
 .map-pin-badge {
   position: absolute;
